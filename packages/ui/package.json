@@ -1,0 +1,32 @@
+{
+  "name": "@acme/ui",
+  "version": "0.0.0",
+  "private": true,
+  "sideEffects": false,
+  "types": "./src/index.ts",
+  "main": "./src/index.ts",
+  "peerDependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "dependencies": {
+    "@radix-ui/react-slot": "^1.1.1",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.5.5"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.14",
+    "@types/react-dom": "^18.3.2",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "14.2.20",
+    "eslint-config-prettier": "^9.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "typescript": "^5.6.3"
+  },
+  "scripts": {
+    "lint": "eslint src --ext .ts,.tsx --max-warnings=0",
+    "typecheck": "tsc -p tsconfig.json"
+  }
+}
