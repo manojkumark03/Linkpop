@@ -211,3 +211,12 @@ model PasswordResetToken {
 
   @@index([userId])
 }
+
+model ContactRequest {
+  id      String   @id @default(cuid())
+  name    String
+  email   String
+  message String
+  metadata Json    @default(dbgenerated("'{}'::jsonb"))
+  createdAt DateTime @default(now())
+}
