@@ -25,6 +25,10 @@ coverage
 playwright-report
 test-results
 
+# uploads
+apps/web/public/uploads/*
+!apps/web/public/uploads/.gitkeep
+
 # misc
 .DS_Store
 *.pem
