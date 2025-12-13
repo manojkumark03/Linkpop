@@ -93,9 +93,30 @@ Tailwind scans `packages/ui` so classes are included in the app build.
 
 ## Auth
 
-NextAuth is wired at `apps/web/src/app/api/auth/[...nextauth]/route.ts`.
+Complete authentication system with NextAuth.js:
 
-To enable OAuth providers, set `GITHUB_ID/GITHUB_SECRET` and/or `GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET`.
+- Email/password credentials with bcrypt hashing and validation
+- OAuth providers (GitHub, Google)
+- Password reset via email tokens
+- Rate limiting and CSRF protection
+- Role-based access control (USER, ADMIN)
+- Account suspension handling
+- Middleware-based route protection
+
+**Quick Start:**
+
+```bash
+# Generate secure secret
+openssl rand -base64 32
+
+# Add to apps/web/.env
+NEXTAUTH_SECRET="your-generated-secret"
+
+# Seed admin user (admin@acme.com / Admin123!)
+pnpm --filter web prisma db seed
+```
+
+See [apps/web/AUTH_README.md](./apps/web/AUTH_README.md) for complete documentation and [apps/web/SECURITY.md](./apps/web/SECURITY.md) for security practices.
 
 ## Vercel deployment notes
 

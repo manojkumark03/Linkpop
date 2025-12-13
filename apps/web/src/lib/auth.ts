@@ -1,26 +1,68 @@
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
+import bcrypt from 'bcryptjs';
 import type { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GitHubProvider from 'next-auth/providers/github';
 import GoogleProvider from 'next-auth/providers/google';
 
 import { prisma } from './prisma';
+import { loginSchema } from './validations/auth';
 
 const hasGitHub = Boolean(process.env.GITHUB_ID && process.env.GITHUB_SECRET);
 const hasGoogle = Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
-  session: { strategy: 'database' },
+  session: {
+    strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60,
+    updateAge: 24 * 60 * 60,
+  },
+  pages: {
+    signIn: '/auth/login',
+    error: '/auth/error',
+  },
   providers: [
     CredentialsProvider({
-      name: 'Placeholder',
+      name: 'Credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
       },
-      async authorize() {
-        return null;
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error('Invalid credentials');
+        }
+
+        const result = loginSchema.safeParse(credentials);
+        if (!result.success) {
+          throw new Error('Invalid email or password');
+        }
+
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email },
+        });
+
+        if (!user || !user.password) {
+          throw new Error('Invalid email or password');
+        }
+
+        if (user.status === 'DISABLED') {
+          throw new Error('Account is suspended');
+        }
+
+        const isValidPassword = await bcrypt.compare(credentials.password, user.password);
+
+        if (!isValidPassword) {
+          throw new Error('Invalid email or password');
+        }
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          image: user.image,
+        };
       },
     }),
     ...(hasGitHub
@@ -40,5 +82,80 @@ export const authOptions: NextAuthOptions = {
         ]
       : []),
   ],
+  callbacks: {
+    async signIn({ user, account }) {
+      if (account?.provider === 'credentials') {
+        return true;
+      }
+
+      if (!user.email) {
+        return false;
+      }
+
+      const existingUser = await prisma.user.findUnique({
+        where: { email: user.email },
+      });
+
+      if (existingUser?.status === 'DISABLED') {
+        return false;
+      }
+
+      return true;
+    },
+    async jwt({ token, user, trigger, session }) {
+      if (user) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: user.id },
+        });
+
+        if (dbUser) {
+          token.id = dbUser.id;
+          token.email = dbUser.email;
+          token.name = dbUser.name;
+          token.image = dbUser.image;
+          token.role = dbUser.role;
+          token.status = dbUser.status;
+        }
+      }
+
+      if (trigger === 'update' && session) {
+        return { ...token, ...session };
+      }
+
+      return token;
+    },
+    async session({ session, token }) {
+      if (token && session.user) {
+        session.user.id = token.id as string;
+        session.user.email = token.email as string;
+        session.user.name = token.name as string;
+        session.user.image = token.image as string;
+        session.user.role = token.role as string;
+        session.user.status = token.status as string;
+      }
+
+      return session;
+    },
+  },
   secret: process.env.NEXTAUTH_SECRET,
+  cookies: {
+    sessionToken: {
+      name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+    csrfToken: {
+      name: `${process.env.NODE_ENV === 'production' ? '__Host-' : ''}next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+  },
 };
