@@ -7,16 +7,149 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum SubscriptionPlan {
+  FREE
+  PRO
+  BUSINESS
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+  INCOMPLETE_EXPIRED
+}
+
+enum DeviceType {
+  DESKTOP
+  MOBILE
+  TABLET
+  BOT
+  UNKNOWN
+}
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum ProfileStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum LinkStatus {
+  ACTIVE
+  HIDDEN
+  ARCHIVED
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
   email         String?   @unique
   emailVerified DateTime?
   image         String?
+
+  status    UserStatus @default(ACTIVE)
+  deletedAt DateTime?
+
   accounts      Account[]
   sessions      Session[]
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  profiles      Profile[]
+  subscriptions Subscription[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Profile {
+  id          String  @id @default(cuid())
+  userId      String
+  slug        String  @unique
+  displayName String?
+  bio         String?
+  image       String?
+
+  themeSettings Json          @default(dbgenerated("'{}'::jsonb")) @map("theme_settings")
+  status        ProfileStatus @default(ACTIVE)
+  deletedAt     DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  links Link[]
+
+  @@index([userId])
+}
+
+model Link {
+  id        String @id @default(cuid())
+  profileId String
+  slug      String
+  title     String
+  url       String
+  position  Int    @default(0)
+
+  status    LinkStatus @default(ACTIVE)
+  deletedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile   Profile     @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  analytics Analytics[]
+
+  @@unique([profileId, slug])
+  @@index([profileId, position])
+}
+
+model Analytics {
+  id         String     @id @default(cuid())
+  linkId     String     @map("link_id")
+  clickedAt  DateTime   @default(now()) @map("clicked_at")
+  country    String?    @db.VarChar(2)
+  referrer   String?
+  deviceType DeviceType @default(UNKNOWN) @map("device_type")
+
+  userAgent String? @map("user_agent")
+
+  link Link @relation(fields: [linkId], references: [id], onDelete: Cascade)
+
+  @@index([linkId, clickedAt])
+  @@index([country])
+  @@index([referrer])
+}
+
+model Subscription {
+  id     String @id @default(cuid())
+  userId String
+
+  plan   SubscriptionPlan   @default(FREE)
+  status SubscriptionStatus @default(ACTIVE)
+
+  provider               String  @default("stripe")
+  providerCustomerId     String? @map("provider_customer_id")
+  providerSubscriptionId String? @unique @map("provider_subscription_id")
+
+  currentPeriodStart DateTime? @map("current_period_start")
+  currentPeriodEnd   DateTime? @map("current_period_end")
+
+  cancelAtPeriodEnd Boolean   @default(false) @map("cancel_at_period_end")
+  canceledAt        DateTime? @map("canceled_at")
+
+  deletedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
 }
 
 model Account {

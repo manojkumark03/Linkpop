@@ -48,7 +48,14 @@ cp .env.example apps/web/.env
 
 ```bash
 pnpm --filter web prisma generate
-pnpm --filter web prisma db push
+pnpm --filter web prisma migrate dev
+pnpm --filter web prisma db seed
+```
+
+For production/CI (non-interactive):
+
+```bash
+pnpm --filter web prisma migrate deploy
 ```
 
 5. Run the app
