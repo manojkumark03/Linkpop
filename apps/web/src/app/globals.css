@@ -32,6 +32,49 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
 
+    --success: 142.1 76.2% 36.3%;
+    --success-foreground: 210 40% 98%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 222.2 84% 4.9%;
+    --info: 217 91% 60%;
+    --info-foreground: 210 40% 98%;
+
+    --primary-50: 0 0% 98%;
+    --primary-100: 240 5% 96%;
+    --primary-200: 240 6% 90%;
+    --primary-300: 240 5% 84%;
+    --primary-400: 240 5% 65%;
+    --primary-500: 240 4% 46%;
+    --primary-600: 240 5% 34%;
+    --primary-700: 240 5% 26%;
+    --primary-800: 240 4% 16%;
+    --primary-900: 240 6% 10%;
+    --primary-950: 240 10% 4%;
+
+    --secondary-50: 0 0% 98%;
+    --secondary-100: 240 5% 96%;
+    --secondary-200: 240 6% 90%;
+    --secondary-300: 240 5% 84%;
+    --secondary-400: 240 5% 65%;
+    --secondary-500: 240 4% 46%;
+    --secondary-600: 240 5% 34%;
+    --secondary-700: 240 5% 26%;
+    --secondary-800: 240 4% 16%;
+    --secondary-900: 240 6% 10%;
+    --secondary-950: 240 10% 4%;
+
+    --accent-50: 214 100% 97%;
+    --accent-100: 214 95% 93%;
+    --accent-200: 213 97% 87%;
+    --accent-300: 212 96% 78%;
+    --accent-400: 213 94% 68%;
+    --accent-500: 217 91% 60%;
+    --accent-600: 221 83% 53%;
+    --accent-700: 224 76% 48%;
+    --accent-800: 226 71% 40%;
+    --accent-900: 224 64% 33%;
+    --accent-950: 226 56% 21%;
+
     --radius: 0.75rem;
   }
 
@@ -63,6 +106,49 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
+
+    --success: 142.1 70.6% 45.3%;
+    --success-foreground: 144.9 80.4% 10%;
+    --warning: 48 96% 53%;
+    --warning-foreground: 222.2 84% 4.9%;
+    --info: 217 91% 60%;
+    --info-foreground: 222.2 47.4% 11.2%;
+
+    --primary-50: 240 10% 4%;
+    --primary-100: 240 6% 10%;
+    --primary-200: 240 4% 16%;
+    --primary-300: 240 5% 26%;
+    --primary-400: 240 5% 34%;
+    --primary-500: 240 4% 46%;
+    --primary-600: 240 5% 65%;
+    --primary-700: 240 5% 84%;
+    --primary-800: 240 6% 90%;
+    --primary-900: 240 5% 96%;
+    --primary-950: 0 0% 98%;
+
+    --secondary-50: 240 10% 4%;
+    --secondary-100: 240 6% 10%;
+    --secondary-200: 240 4% 16%;
+    --secondary-300: 240 5% 26%;
+    --secondary-400: 240 5% 34%;
+    --secondary-500: 240 4% 46%;
+    --secondary-600: 240 5% 65%;
+    --secondary-700: 240 5% 84%;
+    --secondary-800: 240 6% 90%;
+    --secondary-900: 240 5% 96%;
+    --secondary-950: 0 0% 98%;
+
+    --accent-50: 226 56% 21%;
+    --accent-100: 224 64% 33%;
+    --accent-200: 226 71% 40%;
+    --accent-300: 224 76% 48%;
+    --accent-400: 221 83% 53%;
+    --accent-500: 217 91% 60%;
+    --accent-600: 213 94% 68%;
+    --accent-700: 212 96% 78%;
+    --accent-800: 213 97% 87%;
+    --accent-900: 214 95% 93%;
+    --accent-950: 214 100% 97%;
   }
 
   * {
@@ -71,5 +157,15 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  ::selection {
+    background: hsl(var(--accent-200) / 0.6);
+  }
+}
+
+@layer utilities {
+  .focus-ring {
+    @apply focus-visible:ring-ring focus-visible:ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
   }
 }

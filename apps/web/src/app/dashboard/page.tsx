@@ -1,11 +1,15 @@
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@acme/ui';
 
+import { Breadcrumbs } from '@/components/ui/breadcrumbs';
+import { CardGrid } from '@/components/ui/card-grid';
+import { EmptyState } from '@/components/ui/empty-state';
 import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth-helpers';
 import { slugify } from '@/lib/slugs';
 import { normalizeThemeSettings } from '@/lib/theme-settings';
 
 import { ProfileEditor } from './_components/profile-editor';
+import { DashboardOnboardingTour } from './_components/onboarding-tour';
 
 async function ensureDefaultProfile(userId: string, fallback: string) {
   const existing = await prisma.profile.findFirst({
@@ -78,15 +82,12 @@ export default async function DashboardPage({
   if (!selectedProfileId) {
     return (
       <div className="space-y-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Dashboard</h1>
-            <p className="text-muted-foreground">No profile found</p>
-          </div>
-          <Button variant="outline" asChild>
-            <a href="/api/auth/signout">Sign Out</a>
-          </Button>
-        </div>
+        <Breadcrumbs items={[{ label: 'Dashboard', href: '/dashboard' }]} />
+        <EmptyState
+          title="No profile found"
+          description="We couldn't find a profile for your account."
+          action={{ label: 'Sign out', href: '/api/auth/signout' }}
+        />
       </div>
     );
   }
@@ -104,15 +105,12 @@ export default async function DashboardPage({
   if (!profile) {
     return (
       <div className="space-y-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Dashboard</h1>
-            <p className="text-muted-foreground">Profile not found</p>
-          </div>
-          <Button variant="outline" asChild>
-            <a href="/api/auth/signout">Sign Out</a>
-          </Button>
-        </div>
+        <Breadcrumbs items={[{ label: 'Dashboard', href: '/dashboard' }]} />
+        <EmptyState
+          title="Profile not found"
+          description="The requested profile doesn't exist or you don't have access."
+          action={{ label: 'Sign out', href: '/api/auth/signout' }}
+        />
       </div>
     );
   }
@@ -131,76 +129,86 @@ export default async function DashboardPage({
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">Manage your public profile and links</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <a href={`/${profile.slug}`} target="_blank" rel="noreferrer">
-              View Public Page
-            </a>
-          </Button>
-          <Button variant="outline" asChild>
-            <a href="/api/auth/signout">Sign Out</a>
-          </Button>
+      <DashboardOnboardingTour />
+
+      <div id="dashboard-header" className="space-y-3">
+        <Breadcrumbs items={[{ label: 'Dashboard', href: '/dashboard' }]} />
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Dashboard</h1>
+            <p className="text-muted-foreground">Manage your public profile and links</p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" asChild>
+              <a href={`/${profile.slug}`} target="_blank" rel="noreferrer">
+                View Public Page
+              </a>
+            </Button>
+            <Button variant="outline" asChild>
+              <a href="/api/auth/signout">Sign Out</a>
+            </Button>
+          </div>
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle>Total Clicks</CardTitle>
-            <CardDescription>All-time tracked clicks</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{totalClicks}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Clicks (7d)</CardTitle>
-            <CardDescription>Last 7 days</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{clicks7d}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Links</CardTitle>
-            <CardDescription>Published + hidden</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{profile.links.length}</div>
-          </CardContent>
-        </Card>
+      <div data-tour="stats">
+        <CardGrid columns={3}>
+          <Card>
+            <CardHeader>
+              <CardTitle>Total Clicks</CardTitle>
+              <CardDescription>All-time tracked clicks</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{totalClicks}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Clicks (7d)</CardTitle>
+              <CardDescription>Last 7 days</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{clicks7d}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Links</CardTitle>
+              <CardDescription>Published + hidden</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{profile.links.length}</div>
+            </CardContent>
+          </Card>
+        </CardGrid>
       </div>
 
-      <ProfileEditor
-        user={{ id: user.id, email: user.email, name: user.name }}
-        profiles={profiles}
-        profile={{
-          id: profile.id,
-          slug: profile.slug,
-          displayName: profile.displayName,
-          bio: profile.bio,
-          image: profile.image,
-          status: profile.status,
-          themeSettings: normalizeThemeSettings(profile.themeSettings),
-        }}
-        links={profile.links.map((l) => ({
-          id: l.id,
-          profileId: l.profileId,
-          slug: l.slug,
-          title: l.title,
-          url: l.url,
-          position: l.position,
-          metadata: l.metadata,
-          status: l.status,
-        }))}
-      />
+      <div data-tour="profile-editor">
+        <ProfileEditor
+          user={{ id: user.id, email: user.email, name: user.name }}
+          profiles={profiles}
+          profile={{
+            id: profile.id,
+            slug: profile.slug,
+            displayName: profile.displayName,
+            bio: profile.bio,
+            image: profile.image,
+            status: profile.status,
+            themeSettings: normalizeThemeSettings(profile.themeSettings),
+          }}
+          links={profile.links.map((l) => ({
+            id: l.id,
+            profileId: l.profileId,
+            slug: l.slug,
+            title: l.title,
+            url: l.url,
+            position: l.position,
+            metadata: l.metadata,
+            status: l.status,
+          }))}
+        />
+      </div>
     </div>
   );
 }
