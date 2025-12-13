@@ -49,25 +49,36 @@ export default async function AdminPage() {
             <CardTitle>User Management</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground text-sm">Manage users, roles, and permissions</p>
+            <p className="text-muted-foreground text-sm">
+              Manage users, roles, and suspend accounts
+            </p>
+            <Button variant="outline" size="sm" asChild className="mt-4">
+              <a href="/admin/users">Go to Users</a>
+            </Button>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>System Settings</CardTitle>
+            <CardTitle>Analytics & Usage</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground text-sm">Configure application settings</p>
+            <p className="text-muted-foreground text-sm">View system-wide metrics and statistics</p>
+            <Button variant="outline" size="sm" asChild className="mt-4">
+              <a href="/admin/analytics">View Analytics</a>
+            </Button>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Audit Logs</CardTitle>
+            <CardTitle>Billing</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground text-sm">View system activity and logs</p>
+            <p className="text-muted-foreground text-sm">Monitor subscriptions and revenue</p>
+            <Button variant="outline" size="sm" asChild className="mt-4">
+              <a href="/admin/billing">View Billing</a>
+            </Button>
           </CardContent>
         </Card>
       </div>
