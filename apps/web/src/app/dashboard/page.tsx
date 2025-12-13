@@ -1,64 +1,206 @@
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@acme/ui';
-import { requireAuth } from '@/lib/auth-helpers';
 
-export default async function DashboardPage() {
+import { prisma } from '@/lib/prisma';
+import { requireAuth } from '@/lib/auth-helpers';
+import { slugify } from '@/lib/slugs';
+import { normalizeThemeSettings } from '@/lib/theme-settings';
+
+import { ProfileEditor } from './_components/profile-editor';
+
+async function ensureDefaultProfile(userId: string, fallback: string) {
+  const existing = await prisma.profile.findFirst({
+    where: { userId, deletedAt: null },
+    select: { id: true },
+  });
+
+  if (existing) return;
+
+  const base = slugify(fallback) || `user-${userId.slice(0, 6)}`;
+
+  let attempt = 0;
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const slug = attempt === 0 ? base : `${base}-${attempt + 1}`;
+    const slugOwner = await prisma.profile.findUnique({ where: { slug } });
+
+    if (!slugOwner) {
+      await prisma.profile.create({
+        data: {
+          userId,
+          slug,
+          displayName: fallback,
+          themeSettings: {},
+        },
+      });
+      return;
+    }
+
+    attempt += 1;
+    if (attempt > 20) {
+      await prisma.profile.create({
+        data: {
+          userId,
+          slug: `${base}-${Date.now()}`,
+          displayName: fallback,
+          themeSettings: {},
+        },
+      });
+      return;
+    }
+  }
+}
+
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: { profile?: string };
+}) {
   const user = await requireAuth();
+
+  await ensureDefaultProfile(user.id, user.name || user.email || 'My Profile');
+
+  const profiles = await prisma.profile.findMany({
+    where: { userId: user.id, deletedAt: null },
+    orderBy: { createdAt: 'asc' },
+    select: {
+      id: true,
+      slug: true,
+      displayName: true,
+      status: true,
+    },
+  });
+
+  const selectedProfileId =
+    searchParams.profile && profiles.some((p) => p.id === searchParams.profile)
+      ? searchParams.profile
+      : profiles[0]?.id;
+
+  if (!selectedProfileId) {
+    return (
+      <div className="space-y-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Dashboard</h1>
+            <p className="text-muted-foreground">No profile found</p>
+          </div>
+          <Button variant="outline" asChild>
+            <a href="/api/auth/signout">Sign Out</a>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const profile = await prisma.profile.findFirst({
+    where: { id: selectedProfileId, userId: user.id, deletedAt: null },
+    include: {
+      links: {
+        where: { deletedAt: null, status: { not: 'ARCHIVED' } },
+        orderBy: { position: 'asc' },
+      },
+    },
+  });
+
+  if (!profile) {
+    return (
+      <div className="space-y-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Dashboard</h1>
+            <p className="text-muted-foreground">Profile not found</p>
+          </div>
+          <Button variant="outline" asChild>
+            <a href="/api/auth/signout">Sign Out</a>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const [totalClicks, clicks7d] = await Promise.all([
+    prisma.analytics.count({
+      where: { link: { profileId: profile.id } },
+    }),
+    prisma.analytics.count({
+      where: {
+        link: { profileId: profile.id },
+        clickedAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+      },
+    }),
+  ]);
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome to your protected dashboard</p>
+          <p className="text-muted-foreground">Manage your public profile and links</p>
         </div>
-        <Button variant="outline" asChild>
-          <a href="/api/auth/signout">Sign Out</a>
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" asChild>
+            <a href={`/${profile.slug}`} target="_blank" rel="noreferrer">
+              View Public Page
+            </a>
+          </Button>
+          <Button variant="outline" asChild>
+            <a href="/api/auth/signout">Sign Out</a>
+          </Button>
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle>User Information</CardTitle>
-            <CardDescription>Your account details</CardDescription>
+            <CardTitle>Total Clicks</CardTitle>
+            <CardDescription>All-time tracked clicks</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <div>
-              <span className="font-medium">Name:</span> {user.name}
-            </div>
-            <div>
-              <span className="font-medium">Email:</span> {user.email}
-            </div>
-            <div>
-              <span className="font-medium">Role:</span>{' '}
-              <span className={user.role === 'ADMIN' ? 'text-primary' : ''}>{user.role}</span>
-            </div>
-            <div>
-              <span className="font-medium">Status:</span>{' '}
-              <span className={user.status === 'ACTIVE' ? 'text-green-600' : 'text-red-600'}>
-                {user.status}
-              </span>
-            </div>
+          <CardContent>
+            <div className="text-3xl font-bold">{totalClicks}</div>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common tasks</CardDescription>
+            <CardTitle>Clicks (7d)</CardTitle>
+            <CardDescription>Last 7 days</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <Button variant="outline" className="w-full" asChild>
-              <a href="/">Home</a>
-            </Button>
-            {user.role === 'ADMIN' && (
-              <Button variant="outline" className="w-full" asChild>
-                <a href="/admin">Admin Panel</a>
-              </Button>
-            )}
+          <CardContent>
+            <div className="text-3xl font-bold">{clicks7d}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Links</CardTitle>
+            <CardDescription>Published + hidden</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{profile.links.length}</div>
           </CardContent>
         </Card>
       </div>
+
+      <ProfileEditor
+        user={{ id: user.id, email: user.email, name: user.name }}
+        profiles={profiles}
+        profile={{
+          id: profile.id,
+          slug: profile.slug,
+          displayName: profile.displayName,
+          bio: profile.bio,
+          image: profile.image,
+          status: profile.status,
+          themeSettings: normalizeThemeSettings(profile.themeSettings),
+        }}
+        links={profile.links.map((l) => ({
+          id: l.id,
+          profileId: l.profileId,
+          slug: l.slug,
+          title: l.title,
+          url: l.url,
+          position: l.position,
+          metadata: l.metadata,
+          status: l.status,
+        }))}
+      />
     </div>
   );
 }

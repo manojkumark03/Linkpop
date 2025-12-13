@@ -103,6 +103,8 @@ model Link {
   url       String
   position  Int    @default(0)
 
+  metadata  Json @default(dbgenerated("'{}'::jsonb"))
+
   status    LinkStatus @default(ACTIVE)
   deletedAt DateTime?
 
