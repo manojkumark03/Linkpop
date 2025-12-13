@@ -1,13 +1,15 @@
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@acme/ui';
+
+import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { requireAuth } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
+
 import { BillingActions } from './_components/billing-actions';
 import { FeatureComparison } from './_components/feature-comparison';
 
 export default async function BillingPage() {
   const user = await requireAuth();
 
-  // Get user's subscription
   const subscription = await prisma.subscription.findFirst({
     where: { userId: user.id },
     select: {
@@ -25,17 +27,25 @@ export default async function BillingPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Billing & Subscription</h1>
-          <p className="text-muted-foreground">Manage your subscription and upgrade plan</p>
+      <div className="space-y-3">
+        <Breadcrumbs
+          items={[
+            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Billing', href: '/dashboard/billing' },
+          ]}
+        />
+
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Billing & Subscription</h1>
+            <p className="text-muted-foreground">Manage your subscription and upgrade plan</p>
+          </div>
+          <Button variant="outline" asChild>
+            <a href="/dashboard">Back to Dashboard</a>
+          </Button>
         </div>
-        <Button variant="outline" asChild>
-          <a href="/dashboard">Back to Dashboard</a>
-        </Button>
       </div>
 
-      {/* Current Plan */}
       <Card>
         <CardHeader>
           <CardTitle>Current Plan</CardTitle>
@@ -78,10 +88,8 @@ export default async function BillingPage() {
         </CardContent>
       </Card>
 
-      {/* Plans Comparison */}
       <FeatureComparison currentPlan={currentPlan} />
 
-      {/* Usage Statistics */}
       <Card>
         <CardHeader>
           <CardTitle>Usage</CardTitle>

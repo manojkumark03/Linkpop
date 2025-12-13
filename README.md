@@ -85,9 +85,48 @@ pnpm --filter web lint
 pnpm --filter web test
 ```
 
-## UI primitives
+## UI system (design tokens + primitives)
 
-Reusable components live in `packages/ui/src/components` (Button/Input/Card, etc.).
+Reusable, shadcn-style components live in `packages/ui/src/components` and are exported from `@acme/ui`.
+
+Examples:
+
+```tsx
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  Input,
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  toast,
+} from '@acme/ui';
+```
+
+### Theme tokens
+
+The app uses CSS variable tokens in `apps/web/src/app/globals.css` and maps them to Tailwind in
+`apps/web/tailwind.config.ts`.
+
+Common semantic tokens:
+
+- `--background` / `--foreground`
+- `--card` / `--card-foreground`
+- `--primary` / `--primary-foreground`
+- `--secondary` / `--secondary-foreground`
+- `--accent` / `--accent-foreground`
+- `--destructive` / `--destructive-foreground`
+- `--success` / `--success-foreground`
+- `--warning` / `--warning-foreground`
+- `--info` / `--info-foreground`
+- `--border`, `--input`, `--ring`
+
+There are also optional scale tokens (e.g. `--primary-50` … `--primary-950`) to support richer
+palettes while keeping components themeable and dark-mode friendly.
 
 Tailwind scans `packages/ui` so classes are included in the app build.
 
