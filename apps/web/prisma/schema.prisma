@@ -35,6 +35,11 @@ enum UserStatus {
   DISABLED
 }
 
+enum UserRole {
+  USER
+  ADMIN
+}
+
 enum ProfileStatus {
   ACTIVE
   DISABLED
@@ -52,14 +57,18 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
+  password      String?
 
-  status    UserStatus @default(ACTIVE)
+  role   UserRole   @default(USER)
+  status UserStatus @default(ACTIVE)
+
   deletedAt DateTime?
 
-  accounts      Account[]
-  sessions      Session[]
-  profiles      Profile[]
-  subscriptions Subscription[]
+  accounts           Account[]
+  sessions           Session[]
+  profiles           Profile[]
+  subscriptions      Subscription[]
+  passwordResetTokens PasswordResetToken[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -186,4 +195,17 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model PasswordResetToken {
+  id      String   @id @default(cuid())
+  userId  String
+  token   String   @unique
+  expires DateTime
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
