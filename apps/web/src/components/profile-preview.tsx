@@ -82,16 +82,25 @@ export function ProfilePreview({
 
   return (
     <div
-      className={cn('flex min-h-screen items-center justify-center p-6', className)}
+      className={cn('relative flex min-h-screen items-center justify-center p-6', className)}
       style={{
         backgroundColor: theme.backgroundColor,
+        backgroundImage: theme.backgroundImageUrl ? `url(${theme.backgroundImageUrl})` : undefined,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
         color: theme.textColor,
         fontFamily: theme.fontFamily || undefined,
       }}
     >
+      {/* Overlay for better text readability when using background images */}
+      {theme.backgroundImageUrl && (
+        <div className="absolute inset-0 bg-black/20" />
+      )}
+      
       {theme.customCss ? <style dangerouslySetInnerHTML={{ __html: theme.customCss }} /> : null}
 
-      <div className="w-full max-w-md">
+      <div className="relative z-10 w-full max-w-md">
         <div className="flex flex-col items-center text-center">
           {profile.image ? (
             <div className="relative h-24 w-24 overflow-hidden rounded-full border border-white/15">
