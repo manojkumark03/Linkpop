@@ -8,7 +8,7 @@ import { requireAuth } from '@/lib/auth-helpers';
 import { slugify } from '@/lib/slugs';
 import { normalizeThemeSettings } from '@/lib/theme-settings';
 
-import { ProfileEditor } from './_components/profile-editor';
+import { ProfileEditor } from './_components/profile-editor-new';
 import { DashboardOnboardingTour } from './_components/onboarding-tour';
 
 async function ensureDefaultProfile(userId: string, fallback: string) {

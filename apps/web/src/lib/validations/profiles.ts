@@ -11,6 +11,21 @@ export const themeSettingsSchema = z
     buttonRadius: z.number().min(0).max(24).optional(),
     fontFamily: z.string().min(1).optional(),
     customCss: z.string().optional(),
+    backgroundImageUrl: z.string().url().optional(),
+    
+    // Advanced appearance fields
+    backgroundStyle: z.enum(['solid', 'gradient', 'image']).optional(),
+    gradientStops: z.array(
+      z.object({
+        color: z.string().min(1),
+        position: z.number().min(0).max(100),
+      })
+    ).optional(),
+    gradientAngle: z.number().min(0).max(360).optional(),
+    backgroundOverlayOpacity: z.number().min(0).max(1).optional(),
+    buttonVariant: z.enum(['solid', 'outline', 'ghost']).optional(),
+    buttonShadow: z.boolean().optional(),
+    textTransform: z.enum(['none', 'uppercase', 'lowercase', 'capitalize']).optional(),
   })
   .partial();
 

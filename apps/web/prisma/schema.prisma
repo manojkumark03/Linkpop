@@ -220,3 +220,22 @@ model ContactRequest {
   metadata Json    @default(dbgenerated("'{}'::jsonb"))
   createdAt DateTime @default(now())
 }
+
+model ProfileView {
+  id        String   @id @default(cuid())
+  profileId String   @map("profile_id")
+  userAgent String?  @map("user_agent")
+  ipAddress String?  @map("ip_address")
+  country   String?  @db.VarChar(2)
+  referrer  String?
+  deviceType DeviceType @default(UNKNOWN) @map("device_type")
+  
+  createdAt DateTime @default(now())
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId, createdAt])
+  @@index([country])
+  @@index([referrer])
+  @@index([deviceType])
+}
