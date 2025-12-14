@@ -8,6 +8,7 @@ export type ThemeSettings = {
   buttonRadius?: number;
   fontFamily?: string;
   customCss?: string;
+  backgroundImageUrl?: string;
 };
 
 export const defaultThemeSettings: Required<
@@ -16,7 +17,7 @@ export const defaultThemeSettings: Required<
     'backgroundColor' | 'textColor' | 'buttonColor' | 'buttonTextColor' | 'buttonRadius'
   >
 > &
-  Pick<ThemeSettings, 'fontFamily' | 'customCss'> = {
+  Pick<ThemeSettings, 'fontFamily' | 'customCss' | 'backgroundImageUrl'> = {
   backgroundColor: '#0b1220',
   textColor: '#ffffff',
   buttonColor: '#ffffff',
@@ -24,6 +25,7 @@ export const defaultThemeSettings: Required<
   buttonRadius: 12,
   fontFamily: undefined,
   customCss: undefined,
+  backgroundImageUrl: undefined,
 };
 
 export function normalizeThemeSettings(value: Prisma.JsonValue | null | undefined): ThemeSettings {

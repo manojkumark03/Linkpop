@@ -27,6 +27,7 @@ import {
 import { AvatarUploader } from './avatar-uploader';
 import { IconPicker } from './icon-picker';
 import { LinksDndList } from './links-dnd-list';
+import { ImageUrlInput } from '@/components/image-url-input';
 
 export type EditorProfile = {
   id: string;
@@ -346,14 +347,18 @@ export function ProfileEditor({
               />
             </div>
 
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div className="text-muted-foreground text-sm">Avatar shown on your public page</div>
-              <AvatarUploader
-                onUploaded={async (url) => {
-                  saveProfile({ image: url });
-                }}
-              />
-            </div>
+            <ImageUrlInput
+              label="Avatar"
+              value={profileState.image || ''}
+              onChange={(url) => updateProfileDraft({ image: url || null })}
+              onBlur={() => saveProfile({ image: profileState.image })}
+              placeholder="https://example.com/avatar.jpg"
+              showPreview={true}
+              previewSize="small"
+              currentImageUrl={profileState.image || undefined}
+              allowEmpty={true}
+              showServiceInstructions={true}
+            />
           </CardContent>
         </Card>
 
@@ -361,7 +366,26 @@ export function ProfileEditor({
           <CardHeader>
             <CardTitle>Theme</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
+            <ImageUrlInput
+              label="Background Image"
+              value={profileState.themeSettings.backgroundImageUrl || ''}
+              onChange={(url) => 
+                updateProfileDraft({
+                  themeSettings: {
+                    ...profileState.themeSettings,
+                    backgroundImageUrl: url || undefined,
+                  },
+                })
+              }
+              onBlur={() => saveProfile({ themeSettings: profileState.themeSettings })}
+              placeholder="https://example.com/background.jpg"
+              showPreview={false}
+              currentImageUrl={profileState.themeSettings.backgroundImageUrl || undefined}
+              allowEmpty={true}
+              showServiceInstructions={false}
+            />
+
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1">
                 <Label htmlFor="bg">Background</Label>
