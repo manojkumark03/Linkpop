@@ -15,6 +15,7 @@ import { prisma } from '@/lib/prisma';
 
 import { AnalyticsCharts } from './_components/analytics-charts';
 import { TopLinks } from './_components/top-links';
+import { TopPages } from './_components/top-pages';
 import { GeographicBreakdown } from './_components/geographic-breakdown';
 import { DeviceBreakdown } from './_components/device-breakdown';
 import { ReferrerSources } from './_components/referrer-sources';
@@ -87,7 +88,7 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
     return `Last ${daysAgo} days`;
   })();
 
-  const [totalClicks, analytics, topLinks, countries, devices, referrers] = await Promise.all([
+  const [totalClicks, analytics, topLinks, topPages, countries, devices, referrers] = await Promise.all([
     prisma.analytics.count({
       where: {
         link: { profileId: selectedProfileId },
@@ -109,6 +110,16 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
       where: {
         link: { profileId: selectedProfileId },
         clickedAt: { gte: startDate },
+      },
+      _count: { id: true },
+      orderBy: { _count: { id: 'desc' } },
+      take: 5,
+    }),
+    prisma.pageAnalytics.groupBy({
+      by: ['pageId'],
+      where: {
+        page: { profileId: selectedProfileId },
+        viewedAt: { gte: startDate },
       },
       _count: { id: true },
       orderBy: { _count: { id: 'desc' } },
@@ -159,6 +170,23 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
       title: link?.title || 'Unknown',
       url: link?.url || '#',
       clicks: tl._count.id,
+    };
+  });
+
+  const pageIds = topPages.map((p) => p.pageId);
+  const pages = await prisma.page.findMany({
+    where: { id: { in: pageIds } },
+    select: { id: true, title: true, slug: true, icon: true },
+  });
+
+  const topPagesData = topPages.map((tp) => {
+    const page = pages.find((p) => p.id === tp.pageId);
+    return {
+      id: tp.pageId,
+      title: page?.title || 'Unknown',
+      slug: page?.slug || '#',
+      icon: page?.icon,
+      views: tp._count.id,
     };
   });
 
@@ -272,6 +300,10 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
 
         <div className="grid gap-6 md:grid-cols-2">
           <TopLinks links={topLinksData} />
+          <TopPages pages={topPagesData} />
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2">
           <GeographicBreakdown countries={countries} />
         </div>
 

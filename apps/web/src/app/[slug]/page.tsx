@@ -92,6 +92,7 @@ export default async function PublicProfilePage({ params }: { params: { slug: st
           id: p.id,
           title: p.title,
           slug: p.slug,
+          icon: p.icon,
         }))}
       />
 

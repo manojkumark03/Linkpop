@@ -19,7 +19,7 @@ export async function POST(request: NextRequest, { params }: { params: { profile
       );
     }
 
-    const { title, slug, content, isPublished, order } = result.data;
+    const { title, slug, content, icon, isPublished, order } = result.data;
 
     // Verify profile ownership
     const profile = await prisma.profile.findFirst({
@@ -59,6 +59,7 @@ export async function POST(request: NextRequest, { params }: { params: { profile
         title,
         slug,
         content,
+        icon: icon ?? null,
         isPublished: isPublished ?? true,
         order: position,
       },

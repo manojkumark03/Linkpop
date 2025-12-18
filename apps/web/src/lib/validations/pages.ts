@@ -4,6 +4,7 @@ const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 export const createPageSchema = z
   .object({
+    profileId: z.string().min(1),
     title: z.string().min(1).max(100),
     slug: z
       .string()
@@ -11,6 +12,7 @@ export const createPageSchema = z
       .max(64)
       .regex(slugRegex, 'Slug must be lowercase and may include hyphens'),
     content: z.string().min(1),
+    icon: z.string().max(100).optional().nullable(),
     isPublished: z.boolean().optional(),
     order: z.number().int().min(0).optional(),
   })
@@ -26,6 +28,7 @@ export const updatePageSchema = z
       .regex(slugRegex, 'Slug must be lowercase and may include hyphens')
       .optional(),
     content: z.string().min(1).optional(),
+    icon: z.string().max(100).optional().nullable(),
     isPublished: z.boolean().optional(),
     order: z.number().int().min(0).optional(),
   })

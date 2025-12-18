@@ -7,6 +7,7 @@ import remarkGfm from 'remark-gfm';
 
 import { prisma } from '@/lib/prisma';
 import { normalizeThemeSettings } from '@/lib/theme-settings';
+import { PageViewTracker } from '@/components/page-view-tracker';
 
 export const dynamic = 'force-dynamic';
 
@@ -159,6 +160,9 @@ export default async function MarkdownPage({
           </div>
         </article>
       </main>
+
+      {/* Track page view */}
+      <PageViewTracker pageId={page.id} />
     </div>
   );
 }

@@ -35,6 +35,7 @@ type Page = {
   title: string;
   slug: string;
   content: string;
+  icon?: string | null;
   isPublished: boolean;
   order: number;
 };
@@ -59,6 +60,7 @@ export function PagesManager({
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
   const [content, setContent] = useState('');
+  const [icon, setIcon] = useState<string | null>(null);
   const [isPublished, setIsPublished] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
@@ -79,6 +81,7 @@ export function PagesManager({
     setTitle('');
     setSlug('');
     setContent('');
+    setIcon(null);
     setIsPublished(true);
   }
 
@@ -93,6 +96,7 @@ export function PagesManager({
     setTitle(page.title);
     setSlug(page.slug);
     setContent(page.content);
+    setIcon(page.icon ?? null);
     setIsPublished(page.isPublished);
     setEditOpen(true);
   }
@@ -118,6 +122,7 @@ export function PagesManager({
           title: title.trim(),
           slug: slug.trim().toLowerCase(),
           content: content.trim(),
+          icon,
           isPublished,
         }),
       }).then((r) => r.json());
@@ -272,6 +277,7 @@ console.log('Hello World!');
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
+                      {page.icon && <span className="text-lg">{page.icon}</span>}
                       <h4 className="font-medium">{page.title}</h4>
                       <span className="text-muted-foreground text-xs">/{page.slug}</span>
                       {!page.isPublished && (
@@ -332,6 +338,8 @@ console.log('Hello World!');
             setSlug={setSlug}
             content={content}
             setContent={setContent}
+            icon={icon}
+            setIcon={setIcon}
             isPublished={isPublished}
             setIsPublished={setIsPublished}
             previewMode={previewMode}
@@ -358,6 +366,8 @@ console.log('Hello World!');
             setSlug={setSlug}
             content={content}
             setContent={setContent}
+            icon={icon}
+            setIcon={setIcon}
             isPublished={isPublished}
             setIsPublished={setIsPublished}
             previewMode={previewMode}
@@ -380,6 +390,8 @@ function PageForm({
   setSlug,
   content,
   setContent,
+  icon,
+  setIcon,
   isPublished,
   setIsPublished,
   previewMode,
@@ -396,6 +408,8 @@ function PageForm({
   setSlug: (value: string) => void;
   content: string;
   setContent: (value: string) => void;
+  icon: string | null;
+  setIcon: (value: string | null) => void;
   isPublished: boolean;
   setIsPublished: (value: boolean) => void;
   previewMode: boolean;
@@ -408,7 +422,7 @@ function PageForm({
 }) {
   return (
     <div className="space-y-4">
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-2">
           <Label htmlFor="title">Title</Label>
           <Input
@@ -429,6 +443,16 @@ function PageForm({
             maxLength={64}
           />
           <p className="text-muted-foreground text-xs">URL: /{slug || 'your-slug'}</p>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="icon">Icon (Emoji or text)</Label>
+          <Input
+            id="icon"
+            value={icon ?? ''}
+            onChange={(e) => setIcon(e.target.value || null)}
+            placeholder="📄 or page"
+            maxLength={100}
+          />
         </div>
       </div>
 
