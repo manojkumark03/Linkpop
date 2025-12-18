@@ -8,7 +8,10 @@ export async function POST(request: NextRequest, { params }: { params: { profile
     const user = await requireAuth();
     const { profileId } = params;
 
-    const result = createPageSchema.safeParse(await request.json());
+    // Read request body only once to avoid "Body has already been read" error
+    const body = await request.json();
+    
+    const result = createPageSchema.safeParse(body);
     if (!result.success) {
       return NextResponse.json(
         { ok: false, error: 'Validation failed', details: result.error.flatten() },
