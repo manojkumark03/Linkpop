@@ -421,7 +421,7 @@ export async function updatePageAction(pageId: string, input: unknown) {
     },
     select: {
       id: true,
-      profile: { select: { slug: true } },
+      profile: { select: { id: true, slug: true } },
     },
   });
 
@@ -472,7 +472,7 @@ export async function deletePageAction(pageId: string) {
     },
     select: {
       id: true,
-      profile: { select: { slug: true } },
+      profile: { select: { id: true, slug: true } },
     },
   });
 
@@ -652,7 +652,14 @@ export async function createShortLinkAction(input: unknown) {
   });
 
   revalidatePath('/dashboard');
-  return { ok: true as const, shortLink };
+  return {
+    ok: true as const,
+    shortLink: {
+      ...shortLink,
+      createdAt: shortLink.createdAt.toISOString(),
+      updatedAt: shortLink.updatedAt.toISOString(),
+    },
+  };
 }
 
 export async function updateShortLinkAction(shortLinkId: string, input: unknown) {
@@ -702,7 +709,14 @@ export async function updateShortLinkAction(shortLinkId: string, input: unknown)
   });
 
   revalidatePath('/dashboard');
-  return { ok: true as const, shortLink: updatedShortLink };
+  return {
+    ok: true as const,
+    shortLink: {
+      ...updatedShortLink,
+      createdAt: updatedShortLink.createdAt.toISOString(),
+      updatedAt: updatedShortLink.updatedAt.toISOString(),
+    },
+  };
 }
 
 export async function deleteShortLinkAction(shortLinkId: string) {

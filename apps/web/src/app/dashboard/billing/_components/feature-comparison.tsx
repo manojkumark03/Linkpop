@@ -17,10 +17,10 @@ const freeFeatures = [
 ] as const;
 
 const proExtras = [
-  { label: '1-year analytics retention', highlight: true },
-  { label: 'Custom JavaScript injection' },
-  { label: 'Built-in URL shortener' },
-  { label: 'Priority support' },
+  { label: '1-year analytics retention', highlight: true as const },
+  { label: 'Custom JavaScript injection', highlight: false as const },
+  { label: 'Built-in URL shortener', highlight: false as const },
+  { label: 'Priority support', highlight: false as const },
 ] as const;
 
 export function FeatureComparison({ isPro }: { isPro: boolean }) {
