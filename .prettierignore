@@ -1,0 +1,14 @@
+.next
+out
+node_modules
+pnpm-lock.yaml
+coverage
+playwright-report
+test-results
+*.sh
+.prettierignore
+
+# Prisma
+apps/web/prisma/schema.prisma
+apps/web/prisma/migrations/**/*.sql
+apps/web/prisma/migrations/migration_lock.toml
