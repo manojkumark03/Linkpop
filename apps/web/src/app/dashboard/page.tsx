@@ -266,7 +266,7 @@ export default async function DashboardPage({
               id: user.id,
               email: user.email,
               name: user.name,
-              subscriptionTier: user.subscriptionTier,
+              subscriptionTier: user.subscriptionTier as 'FREE' | 'PRO',
             }}
             profiles={profiles}
             profile={{

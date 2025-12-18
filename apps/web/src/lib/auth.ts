@@ -115,8 +115,11 @@ export const authOptions: NextAuthOptions = {
           token.image = dbUser.image || '';
           token.role = dbUser.role;
           token.status = dbUser.status;
-          token.subscriptionTier = dbUser.subscriptionTier;
-          token.subscriptionStatus = dbUser.subscriptionStatus;
+          token.subscriptionTier = dbUser.subscriptionTier as 'FREE' | 'PRO';
+          token.subscriptionStatus = dbUser.subscriptionStatus as
+            | 'ACTIVE'
+            | 'CANCELLED'
+            | 'EXPIRED';
         }
       }
 
@@ -137,8 +140,8 @@ export const authOptions: NextAuthOptions = {
         session.user.image = token.image as string;
         session.user.role = token.role as string;
         session.user.status = token.status as string;
-        session.user.subscriptionTier = subscriptionTier;
-        session.user.subscriptionStatus = subscriptionStatus;
+        session.user.subscriptionTier = subscriptionTier as 'FREE' | 'PRO';
+        session.user.subscriptionStatus = subscriptionStatus as 'ACTIVE' | 'CANCELLED' | 'EXPIRED';
       }
 
       return session;
