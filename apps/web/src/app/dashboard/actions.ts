@@ -356,7 +356,7 @@ export async function createPageAction(input: unknown) {
     return { ok: false as const, error: 'Validation failed', details: result.error.flatten() };
   }
 
-  const { profileId, title, slug, content, isPublished, order } = result.data;
+  const { profileId, title, slug, content, icon, isPublished, order } = result.data;
 
   // Verify profile ownership
   const profile = await prisma.profile.findFirst({
@@ -393,6 +393,7 @@ export async function createPageAction(input: unknown) {
       title,
       slug,
       content,
+      icon: icon ?? null,
       isPublished: isPublished ?? true,
       order: position,
     },
@@ -411,7 +412,7 @@ export async function updatePageAction(pageId: string, input: unknown) {
     return { ok: false as const, error: 'Validation failed', details: result.error.flatten() };
   }
 
-  const { title, slug, content, isPublished, order } = result.data;
+  const { title, slug, content, icon, isPublished, order } = result.data;
 
   // Verify profile ownership and page existence
   const page = await prisma.page.findFirst({
@@ -451,6 +452,7 @@ export async function updatePageAction(pageId: string, input: unknown) {
       ...(title !== undefined && { title }),
       ...(slug !== undefined && { slug }),
       ...(content !== undefined && { content }),
+      ...(icon !== undefined && { icon: icon ?? null }),
       ...(isPublished !== undefined && { isPublished }),
       ...(order !== undefined && { order }),
     },

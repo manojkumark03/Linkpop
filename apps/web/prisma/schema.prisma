@@ -122,6 +122,7 @@ model Page {
   slug      String
   title     String
   content   String  @db.Text
+  icon      String?
   isPublished Boolean @default(true)
   order     Int     @default(0)
 
@@ -129,6 +130,7 @@ model Page {
   updatedAt DateTime @updatedAt
 
   profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  pageAnalytics PageAnalytics[]
 
   @@unique([profileId, slug])
   @@index([profileId, order])
@@ -192,6 +194,22 @@ model Analytics {
   link Link @relation(fields: [linkId], references: [id], onDelete: Cascade)
 
   @@index([linkId, clickedAt])
+  @@index([country])
+  @@index([referrer])
+}
+
+model PageAnalytics {
+  id        String    @id @default(cuid())
+  pageId    String    @map("page_id")
+  viewedAt  DateTime  @default(now()) @map("viewed_at")
+  country   String?   @db.VarChar(2)
+  referrer  String?
+  deviceType DeviceType @default(UNKNOWN) @map("device_type")
+  userAgent String?   @map("user_agent")
+
+  page Page @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@index([pageId, viewedAt])
   @@index([country])
   @@index([referrer])
 }

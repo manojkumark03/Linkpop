@@ -32,6 +32,7 @@ export type PreviewPage = {
   id: string;
   title: string;
   slug: string;
+  icon?: string | null;
 };
 
 export type PreviewLink = {
@@ -231,7 +232,10 @@ export function ProfilePreview({
                     backgroundColor: 'rgba(255, 255, 255, 0.05)',
                   }}
                 >
-                  <span className="font-medium">{page.title}</span>
+                  <span className="flex items-center gap-2 font-medium">
+                    {page.icon && <span className="text-lg">{page.icon}</span>}
+                    {page.title}
+                  </span>
                   <ChevronRight className="h-4 w-4 opacity-60" />
                 </Link>
               ))}
