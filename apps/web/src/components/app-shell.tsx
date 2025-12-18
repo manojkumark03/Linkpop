@@ -17,7 +17,12 @@ function isPublicProfilePath(pathname: string) {
   if (pathname.startsWith('/admin')) return false;
   if (pathname.startsWith('/api')) return false;
 
-  return pathname.split('/').filter(Boolean).length === 1;
+  const segments = pathname.split('/').filter(Boolean);
+
+  // Public profile paths can be:
+  // 1. Single segment: /username
+  // 2. Two segments: /username/page-slug (for markdown pages)
+  return segments.length === 1 || segments.length === 2;
 }
 
 function isMarketingPath(pathname: string) {
