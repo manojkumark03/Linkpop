@@ -11,7 +11,10 @@ export async function PATCH(
     const user = await requireAuth();
     const { profileId, pageId } = params;
 
-    const result = updatePageSchema.safeParse(await request.json());
+    // Read request body only once to avoid "Body has already been read" error
+    const body = await request.json();
+    
+    const result = updatePageSchema.safeParse(body);
     if (!result.success) {
       return NextResponse.json(
         { ok: false, error: 'Validation failed', details: result.error.flatten() },

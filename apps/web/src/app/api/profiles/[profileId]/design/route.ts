@@ -32,7 +32,9 @@ export async function PATCH(request: NextRequest, { params }: { params: { profil
     return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
   }
 
-  const body = updateProfileDesignSchema.safeParse(await request.json().catch(() => null));
+  // Read request body only once to avoid "Body has already been read" error
+  const requestBody = await request.json().catch(() => null);
+  const body = updateProfileDesignSchema.safeParse(requestBody);
   if (!body.success) {
     return NextResponse.json(
       { error: 'Validation failed', details: body.error.flatten() },
