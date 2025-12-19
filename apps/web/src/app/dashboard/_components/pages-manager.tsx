@@ -28,7 +28,7 @@ import {
 } from '@acme/ui';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Plus, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, EyeOff, FileText } from 'lucide-react';
 import type { Page, PageFormProps, PagesManagerProps } from '@/types/pages';
 
 export function PagesManager({
@@ -232,7 +232,10 @@ console.log('Hello World!');
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>📄 Pages</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Pages
+              </CardTitle>
               <CardDescription>Create markdown pages for your profile</CardDescription>
             </div>
             <Button onClick={openCreateModal}>
@@ -420,7 +423,7 @@ function PageForm({
             id="icon"
             value={icon ?? ''}
             onChange={(e) => setIcon(e.target.value || null)}
-            placeholder="📄 or page"
+            placeholder="🔖 or page"
             maxLength={100}
           />
         </div>

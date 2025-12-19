@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Prisma } from '@prisma/client';
-import { CheckCircle2, MoreHorizontal, Link as LinkIcon, Plus } from 'lucide-react';
+import { CheckCircle2, MoreHorizontal, Link as LinkIcon, Plus, Link2, Copy, FileText, Settings, Trash2, RefreshCw } from 'lucide-react';
 
 import {
   Badge,
@@ -700,16 +700,28 @@ export function ProfileEditor({
         {/* Tabs interface */}
         <Tabs defaultValue="links" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="links">🔗 Links</TabsTrigger>
-            <TabsTrigger value="pages">📄 Pages</TabsTrigger>
-            <TabsTrigger value="settings">⚙️ Settings</TabsTrigger>
+            <TabsTrigger value="links">
+              <Link2 className="mr-2 h-4 w-4" />
+              Links
+            </TabsTrigger>
+            <TabsTrigger value="pages">
+              <FileText className="mr-2 h-4 w-4" />
+              Pages
+            </TabsTrigger>
+            <TabsTrigger value="settings">
+              <Settings className="mr-2 h-4 w-4" />
+              Settings
+            </TabsTrigger>
           </TabsList>
 
           {/* Links Tab */}
           <TabsContent value="links" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>📝 Manage Links & Copy Fields</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Link2 className="h-5 w-5" />
+                  Manage Links & Copy Fields
+                </CardTitle>
                 <CardDescription>Add regular links, copy fields, edit, and reorder</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -763,7 +775,8 @@ export function ProfileEditor({
                       onClick={() => setNewLinkType('URL')}
                       className="whitespace-nowrap"
                     >
-                      🔗 Link
+                      <Link2 className="mr-1.5 h-3.5 w-3.5" />
+                      Link
                     </Button>
                     <Button
                       type="button"
@@ -776,7 +789,8 @@ export function ProfileEditor({
                       }}
                       className="whitespace-nowrap"
                     >
-                      📋 Copy
+                      <Copy className="mr-1.5 h-3.5 w-3.5" />
+                      Copy
                     </Button>
                   </div>
                 </div>
@@ -891,10 +905,10 @@ export function ProfileEditor({
                                     );
                                     handleUpdateLink(link.id, { linkType: newType });
                                   }}
-                                >
-                                  <option value="URL">🔗 Link</option>
-                                  <option value="COPY_FIELD">📋 Copy Field</option>
-                                </select>
+                                  >
+                                  <option value="URL">Link</option>
+                                  <option value="COPY_FIELD">Copy Field</option>
+                                  </select>
                               </div>
                               <div className="space-y-1">
                                 <Label htmlFor={`status-${link.id}`}>Status</Label>
@@ -914,11 +928,11 @@ export function ProfileEditor({
                                     );
                                     handleUpdateLink(link.id, { status: newStatus });
                                   }}
-                                >
-                                  <option value="ACTIVE">🟢 Active</option>
-                                  <option value="HIDDEN">👁️ Hidden</option>
-                                  <option value="ARCHIVED">🗑️ Archived</option>
-                                </select>
+                                  >
+                                  <option value="ACTIVE">Active</option>
+                                  <option value="HIDDEN">Hidden</option>
+                                  <option value="ARCHIVED">Archived</option>
+                                  </select>
                               </div>
                             </div>
 
@@ -944,7 +958,7 @@ export function ProfileEditor({
                                 className="text-destructive hover:text-destructive"
                               >
                                 <span className="sr-only">Delete</span>
-                                🗑️
+                                <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
                           </div>
@@ -966,7 +980,10 @@ export function ProfileEditor({
           <TabsContent value="settings" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>⚙️ Profile Settings</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Profile Settings
+                </CardTitle>
                 <CardDescription>Basic information and theme</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -1071,7 +1088,10 @@ export function ProfileEditor({
 
             <Card>
               <CardHeader>
-                <CardTitle>🔄 Profile Actions</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <RefreshCw className="h-5 w-5" />
+                  Profile Actions
+                </CardTitle>
                 <CardDescription>Duplicate, export, or create new profiles</CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

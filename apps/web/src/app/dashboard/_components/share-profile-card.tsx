@@ -1,5 +1,7 @@
 'use client';
 
+import { Share2 } from 'lucide-react';
+
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, toast } from '@acme/ui';
 
 export function ShareProfileCard({ slug }: { slug: string }) {
@@ -23,7 +25,10 @@ export function ShareProfileCard({ slug }: { slug: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>🔗 Share Your Profile</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <Share2 className="h-5 w-5" />
+          Share Your Profile
+        </CardTitle>
         <CardDescription>Copy your profile link or download QR code</CardDescription>
       </CardHeader>
       <CardContent>
