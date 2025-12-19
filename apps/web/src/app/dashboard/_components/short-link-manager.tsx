@@ -231,7 +231,10 @@ export function ShortLinkManager({ user, initialShortLinks }: ShortLinkManagerPr
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>🔗 URL Shortener</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Link2 className="h-5 w-5" />
+                URL Shortener
+              </CardTitle>
               <CardDescription>Create branded short links with analytics</CardDescription>
             </div>
             <Button onClick={openCreateModal}>

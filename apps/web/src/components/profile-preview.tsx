@@ -15,7 +15,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
-import { cn } from '@acme/ui';
+import { cn, toast } from '@acme/ui';
 
 import type { ThemeSettings } from '@/lib/theme-settings';
 import { isLinkVisible } from '@/lib/link-visibility';
@@ -183,9 +183,20 @@ export function ProfilePreview({
                       </div>
                     </div>
                     <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(l.url);
-                        // You could add a toast here
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(l.url);
+                          toast({
+                            title: "Copied!",
+                            description: `${l.title} copied to clipboard`,
+                          });
+                        } catch (err) {
+                          toast({
+                            title: "Failed to copy",
+                            description: "Please try again",
+                            variant: "destructive",
+                          });
+                        }
                       }}
                       className="inline-flex items-center gap-1 rounded border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/40"
                       style={{
