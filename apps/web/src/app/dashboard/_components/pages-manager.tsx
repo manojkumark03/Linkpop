@@ -29,24 +29,12 @@ import {
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Plus, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
-
-type Page = {
-  id: string;
-  title: string;
-  slug: string;
-  content: string;
-  icon?: string | null;
-  isPublished: boolean;
-  order: number;
-};
+import type { Page, PageFormProps, PagesManagerProps } from '@/types/pages';
 
 export function PagesManager({
   profileId,
   initialPages,
-}: {
-  profileId: string;
-  initialPages: Page[];
-}) {
+}: PagesManagerProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -401,25 +389,7 @@ function PageForm({
   onCancel,
   sampleContent,
   isEditing = false,
-}: {
-  title: string;
-  setTitle: (value: string) => void;
-  slug: string;
-  setSlug: (value: string) => void;
-  content: string;
-  setContent: (value: string) => void;
-  icon: string | null;
-  setIcon: (value: string | null) => void;
-  isPublished: boolean;
-  setIsPublished: (value: boolean) => void;
-  previewMode: boolean;
-  setPreviewMode: (value: boolean) => void;
-  onSubmit: () => void;
-  submitting: boolean;
-  onCancel: () => void;
-  sampleContent?: string;
-  isEditing?: boolean;
-}) {
+}: PageFormProps) {
   return (
     <div className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-3">

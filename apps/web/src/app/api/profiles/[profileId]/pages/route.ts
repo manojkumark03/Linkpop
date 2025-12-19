@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth-helpers';
 import { createPageSchema } from '@/lib/validations/pages';
+import type { CreatePageInput, PageCreateResponse } from '@/types/pages';
 
 export async function POST(request: NextRequest, { params }: { params: { profileId: string } }) {
   try {
@@ -13,8 +14,31 @@ export async function POST(request: NextRequest, { params }: { params: { profile
     
     const result = createPageSchema.safeParse(body);
     if (!result.success) {
-      return NextResponse.json(
-        { ok: false, error: 'Validation failed', details: result.error.flatten() },
+      console.error('Page creation validation failed:', {
+        profileId,
+        body,
+        errors: result.error.flatten(),
+      });
+      
+      // Format validation errors in a more user-friendly way
+      const fieldErrors: Record<string, string> = {};
+      const formErrors = result.error.flatten().fieldErrors;
+      
+      for (const [field, errors] of Object.entries(formErrors)) {
+        if (errors && errors.length > 0) {
+          fieldErrors[field] = errors[0]; // Take first error message
+        }
+      }
+
+      return NextResponse.json<PageCreateResponse>(
+        {
+          ok: false,
+          error: 'Invalid page data',
+          details: {
+            fieldErrors,
+            formErrors: result.error.flatten().formErrors,
+          },
+        },
         { status: 400 },
       );
     }
