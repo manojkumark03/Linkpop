@@ -302,7 +302,7 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
           </Card>
         ) : null}
 
-        <AnalyticsCharts analytics={analytics} range={daysAgo} retentionDays={retentionDays} />
+        <AnalyticsCharts analytics={analytics} range={effectiveDays} retentionDays={retentionDays} />
 
         <div className="grid gap-6 md:grid-cols-2">
           <TopLinks links={topLinksData} />

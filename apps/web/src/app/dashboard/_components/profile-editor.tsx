@@ -62,6 +62,7 @@ import {
   ProfilePreview,
   type PreviewLink,
   type PreviewProfile,
+  type PreviewPage,
 } from '@/components/profile-preview';
 import { PagesManager } from './pages-manager';
 import { slugify } from '@/lib/slugs';
@@ -269,6 +270,19 @@ export function ProfileEditor({
         metadata: l.metadata,
       })),
     [linksState],
+  );
+
+  const previewPages: PreviewPage[] = useMemo(
+    () =>
+      pagesState
+        .filter((p) => p.isPublished)
+        .map((p) => ({
+          id: p.id,
+          title: p.title,
+          slug: p.slug,
+          icon: p.icon,
+        })),
+    [pagesState],
   );
 
   function updateProfileDraft(patch: Partial<EditorProfile>) {
@@ -1350,7 +1364,7 @@ export function ProfileEditor({
           <ProfilePreview
             profile={previewProfile}
             links={previewLinks}
-            showQr
+            pages={previewPages}
             className="min-h-0"
           />
         </div>

@@ -19,8 +19,9 @@ export async function GET(request: NextRequest) {
 
   const searchParams = request.nextUrl.searchParams;
   const profileId = searchParams.get('profile');
-  const range = searchParams.get('range') || '7';
-  const daysAgo = parseInt(range);
+  const rawRange = searchParams.get('range');
+  const parsedRange = rawRange ? parseInt(rawRange, 10) : NaN;
+  const requestedDays = Number.isFinite(parsedRange) ? parsedRange : NaN;
 
   if (!profileId) {
     return NextResponse.json({ error: 'Profile ID required' }, { status: 400 });
@@ -44,8 +45,10 @@ export async function GET(request: NextRequest) {
   const retentionDays = getAnalyticsRetentionDays(subscriptionTier);
   const retentionCutoffDate = getAnalyticsRetentionCutoffDate(subscriptionTier);
 
-  const requestedStartDate =
-    daysAgo === 0 ? new Date(0) : new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
+  const normalizedRequestedDays = requestedDays > 0 ? requestedDays : retentionDays;
+  const effectiveDays = Math.min(normalizedRequestedDays, retentionDays);
+
+  const requestedStartDate = new Date(Date.now() - normalizedRequestedDays * 24 * 60 * 60 * 1000);
   const startDate = getEffectiveStartDate({ requestedStartDate, retentionCutoffDate });
 
   const analytics = await prisma.analytics.findMany({
@@ -85,7 +88,7 @@ export async function GET(request: NextRequest) {
   return new NextResponse(csv, {
     headers: {
       'Content-Type': 'text/csv',
-      'Content-Disposition': `attachment; filename="analytics-${profile.slug}-${new Date().toISOString().split('T')[0]}-last-${retentionDays}-days.csv"`,
+      'Content-Disposition': `attachment; filename="analytics-${profile.slug}-${new Date().toISOString().split('T')[0]}-last-${effectiveDays}-days.csv"`,
     },
   });
 }

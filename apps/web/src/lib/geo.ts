@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server';
 const COUNTRY_HEADER_CANDIDATES = [
   'x-vercel-ip-country',
   'cf-ipcountry',
+  'cloudflare-ipcountry',
   'cloudfront-viewer-country',
   'fly-client-country',
   'x-appengine-country',
