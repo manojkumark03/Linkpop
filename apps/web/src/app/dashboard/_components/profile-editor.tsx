@@ -92,6 +92,7 @@ export type EditorPage = {
   title: string;
   slug: string;
   content: string;
+  icon?: string | null;
   isPublished: boolean;
   order: number;
 };
