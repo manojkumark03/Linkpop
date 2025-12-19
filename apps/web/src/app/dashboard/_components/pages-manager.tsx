@@ -40,6 +40,10 @@ export function PagesManager({
 
   const [pages, setPages] = useState<Page[]>(initialPages);
   const [createOpen, setCreateOpen] = useState(false);
+
+  useEffect(() => {
+    setPages(initialPages);
+  }, [initialPages, profileId]);
   const [editOpen, setEditOpen] = useState(false);
   const [editingPage, setEditingPage] = useState<Page | null>(null);
   const [previewMode, setPreviewMode] = useState(false);

@@ -102,6 +102,9 @@ export default async function DashboardPage({
         where: { deletedAt: null, status: { not: 'ARCHIVED' } },
         orderBy: { position: 'asc' },
       },
+      pages: {
+        orderBy: { order: 'asc' },
+      },
     },
   });
 
@@ -290,6 +293,16 @@ export default async function DashboardPage({
               position: l.position,
               metadata: l.metadata,
               status: l.status,
+            }))}
+            pages={profile.pages.map((p) => ({
+              id: p.id,
+              profileId: p.profileId,
+              title: p.title,
+              slug: p.slug,
+              content: p.content,
+              icon: p.icon,
+              isPublished: p.isPublished,
+              order: p.order,
             }))}
           />
         </div>

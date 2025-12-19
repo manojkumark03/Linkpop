@@ -3,7 +3,28 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Prisma } from '@prisma/client';
-import { CheckCircle2, MoreHorizontal, Link as LinkIcon, Plus, Link2, Copy, FileText, Settings, Trash2, RefreshCw } from 'lucide-react';
+import {
+  CheckCircle2,
+  MoreHorizontal,
+  Link as LinkIcon,
+  Plus,
+  Link2,
+  Copy,
+  FileText,
+  Settings,
+  Trash2,
+  RefreshCw,
+  Eye,
+  EyeOff,
+  Pencil,
+  Globe,
+  Github,
+  Twitter,
+  Linkedin,
+  Instagram,
+  Youtube,
+  type LucideIcon,
+} from 'lucide-react';
 
 import {
   Badge,
@@ -89,10 +110,11 @@ export type EditorLink = {
 
 export type EditorPage = {
   id: string;
+  profileId: string;
   title: string;
   slug: string;
   content: string;
-  icon?: string | null;
+  icon: string | null;
   isPublished: boolean;
   order: number;
 };
@@ -128,6 +150,22 @@ function getLinkMetadata(link: Pick<EditorLink, 'metadata'>): Record<string, any
   return link.metadata as Record<string, any>;
 }
 
+const linkIconMap: Record<string, LucideIcon> = {
+  github: Github,
+  twitter: Twitter,
+  linkedin: Linkedin,
+  instagram: Instagram,
+  youtube: Youtube,
+  website: Globe,
+  globe: Globe,
+};
+
+function resolveLucideIcon(icon: unknown): LucideIcon | null {
+  if (typeof icon !== 'string') return null;
+  const key = icon.trim().toLowerCase();
+  return key ? linkIconMap[key] ?? null : null;
+}
+
 export function ProfileEditor({
   user,
   profiles,
@@ -154,6 +192,10 @@ export function ProfileEditor({
   const [linksState, setLinksState] = useState<EditorLink[]>(links);
   const [pagesState, setPagesState] = useState<EditorPage[]>(pages);
 
+  useEffect(() => {
+    setPagesState(pages);
+  }, [pages, profile.id]);
+
   const [switchingProfile, setSwitchingProfile] = useState(false);
 
   // Link creation state
@@ -162,6 +204,16 @@ export function ProfileEditor({
   const [newLinkUrlTouched, setNewLinkUrlTouched] = useState(false);
   const [newLinkType, setNewLinkType] = useState<'URL' | 'COPY_FIELD'>('URL');
   const [addingLink, setAddingLink] = useState(false);
+
+  // Link edit dialog state
+  const [editLinkOpen, setEditLinkOpen] = useState(false);
+  const [editingLink, setEditingLink] = useState<EditorLink | null>(null);
+  const [editLinkTitle, setEditLinkTitle] = useState('');
+  const [editLinkUrl, setEditLinkUrl] = useState('');
+  const [editLinkType, setEditLinkType] = useState<'URL' | 'COPY_FIELD'>('URL');
+  const [editLinkStatus, setEditLinkStatus] = useState<'ACTIVE' | 'HIDDEN' | 'ARCHIVED'>('ACTIVE');
+  const [editLinkIcon, setEditLinkIcon] = useState('');
+  const [editLinkDisplay, setEditLinkDisplay] = useState<'button' | 'icon'>('button');
 
   const titleInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -316,6 +368,87 @@ export function ProfileEditor({
     setAddingLink(false);
     toast({ title: 'Link added', description: 'Your link has been saved.' });
     router.refresh();
+  }
+
+  function openEditLinkDialog(link: EditorLink) {
+    const md = getLinkMetadata(link);
+
+    setEditingLink(link);
+    setEditLinkTitle(link.title);
+    setEditLinkUrl(link.url);
+    setEditLinkType(link.linkType);
+    setEditLinkStatus(link.status);
+    setEditLinkIcon(typeof md.icon === 'string' ? md.icon : '');
+    setEditLinkDisplay(md.display === 'icon' ? 'icon' : 'button');
+    setEditLinkOpen(true);
+  }
+
+  function closeEditLinkDialog(open: boolean) {
+    setEditLinkOpen(open);
+    if (!open) {
+      setEditingLink(null);
+      setEditLinkTitle('');
+      setEditLinkUrl('');
+      setEditLinkType('URL');
+      setEditLinkStatus('ACTIVE');
+      setEditLinkIcon('');
+      setEditLinkDisplay('button');
+    }
+  }
+
+  function handleSaveEditedLink() {
+    if (!editingLink) return;
+
+    const title = editLinkTitle.trim();
+    const url = editLinkUrl.trim();
+
+    if (!title) {
+      toast({ title: 'Missing title', description: 'Please enter a title.', variant: 'destructive' });
+      return;
+    }
+
+    if (editLinkType === 'URL' && !isValidHttpUrl(url)) {
+      toast({
+        title: 'Invalid URL',
+        description: 'Please enter a valid URL (e.g., https://instagram.com/yourname)',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (editLinkType === 'COPY_FIELD' && !isValidCopyFieldValue(url)) {
+      toast({
+        title: 'Invalid text',
+        description: 'Please enter text to copy',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const md = getLinkMetadata(editingLink);
+    const nextMd: Record<string, any> = { ...md };
+
+    if (editLinkIcon.trim()) {
+      nextMd.icon = editLinkIcon.trim();
+    } else {
+      delete nextMd.icon;
+    }
+
+    if (editLinkType === 'URL' && nextMd.icon && editLinkDisplay === 'icon') {
+      nextMd.display = 'icon';
+    } else {
+      delete nextMd.display;
+    }
+
+    handleUpdateLink(editingLink.id, {
+      title,
+      url,
+      linkType: editLinkType,
+      status: editLinkStatus,
+      metadata: nextMd as any,
+    });
+
+    closeEditLinkDialog(false);
   }
 
   function handleUpdateLink(linkId: string, patch: Partial<EditorLink>) {
@@ -841,126 +974,79 @@ export function ProfileEditor({
                     onReorder={(orderedIds) => handleReorder(orderedIds)}
                     renderLink={(link, { dragHandle, isDragging }) => {
                       const md = getLinkMetadata(link);
+                      const Icon = resolveLucideIcon(md.icon);
+                      const isHidden = link.status === 'HIDDEN';
+                      const isIconLink = link.linkType === 'URL' && md.display === 'icon' && !!md.icon;
 
                       return (
                         <div
                           className={cn(
-                            'border-border bg-card rounded-lg border p-3',
+                            'border-border bg-card flex items-start gap-3 rounded-lg border p-3',
                             isDragging && 'ring-ring ring-2',
                           )}
                         >
-                          <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-                            <div className="pt-1">{dragHandle}</div>
+                          <div className="pt-0.5">{dragHandle}</div>
 
-                            <div className="grid flex-1 gap-3 sm:grid-cols-2">
-                              <div className="space-y-1">
-                                <Label htmlFor={`title-${link.id}`}>Title</Label>
-                                <Input
-                                  id={`title-${link.id}`}
-                                  value={link.title}
-                                  onChange={(e) =>
-                                    setLinksState((prev) =>
-                                      prev.map((l) =>
-                                        l.id === link.id ? { ...l, title: e.target.value } : l,
-                                      ),
-                                    )
-                                  }
-                                  onBlur={() => handleUpdateLink(link.id, { title: link.title })}
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <Label htmlFor={`url-${link.id}`}>
-                                  {link.linkType === 'COPY_FIELD' ? 'Text to Copy' : 'URL'}
-                                </Label>
-                                <Input
-                                  id={`url-${link.id}`}
-                                  value={link.url}
-                                  onChange={(e) =>
-                                    setLinksState((prev) =>
-                                      prev.map((l) =>
-                                        l.id === link.id ? { ...l, url: e.target.value } : l,
-                                      ),
-                                    )
-                                  }
-                                  onBlur={() => handleUpdateLink(link.id, { url: link.url })}
-                                  placeholder={
-                                    link.linkType === 'COPY_FIELD'
-                                      ? 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh'
-                                      : 'https://instagram.com/yourname'
-                                  }
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <Label htmlFor={`linkType-${link.id}`}>Type</Label>
-                                <select
-                                  id={`linkType-${link.id}`}
-                                  className="border-input bg-background h-10 w-full rounded-md border px-3 text-sm"
-                                  value={link.linkType}
-                                  onChange={(e) => {
-                                    const newType = e.target.value as 'URL' | 'COPY_FIELD';
-                                    setLinksState((prev) =>
-                                      prev.map((l) =>
-                                        l.id === link.id ? { ...l, linkType: newType } : l,
-                                      ),
-                                    );
-                                    handleUpdateLink(link.id, { linkType: newType });
-                                  }}
-                                  >
-                                  <option value="URL">Link</option>
-                                  <option value="COPY_FIELD">Copy Field</option>
-                                  </select>
-                              </div>
-                              <div className="space-y-1">
-                                <Label htmlFor={`status-${link.id}`}>Status</Label>
-                                <select
-                                  id={`status-${link.id}`}
-                                  className="border-input bg-background h-10 w-full rounded-md border px-3 text-sm"
-                                  value={link.status}
-                                  onChange={(e) => {
-                                    const newStatus = e.target.value as
-                                      | 'ACTIVE'
-                                      | 'HIDDEN'
-                                      | 'ARCHIVED';
-                                    setLinksState((prev) =>
-                                      prev.map((l) =>
-                                        l.id === link.id ? { ...l, status: newStatus } : l,
-                                      ),
-                                    );
-                                    handleUpdateLink(link.id, { status: newStatus });
-                                  }}
-                                  >
-                                  <option value="ACTIVE">Active</option>
-                                  <option value="HIDDEN">Hidden</option>
-                                  <option value="ARCHIVED">Archived</option>
-                                  </select>
-                              </div>
-                            </div>
+                          <div className="bg-muted text-muted-foreground flex h-10 w-10 items-center justify-center rounded-md">
+                            {Icon ? (
+                              <Icon className="h-5 w-5" />
+                            ) : link.linkType === 'COPY_FIELD' ? (
+                              <Copy className="h-5 w-5" />
+                            ) : (
+                              <Link2 className="h-5 w-5" />
+                            )}
+                          </div>
 
-                            <div className="flex items-center gap-2">
-                              <IconPicker
-                                id={`icon-${link.id}`}
-                                value={md.icon}
-                                onChange={(value) => {
-                                  const next = { ...md } as Record<string, any>;
-                                  if (value) {
-                                    next.icon = value;
-                                  } else {
-                                    delete next.icon;
-                                  }
-                                  handleUpdateLink(link.id, { metadata: next as any });
-                                }}
-                              />
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleArchiveLink(link.id)}
-                                className="text-destructive hover:text-destructive"
-                              >
-                                <span className="sr-only">Delete</span>
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="truncate font-medium">{link.title}</span>
+                              {link.linkType === 'COPY_FIELD' ? (
+                                <Badge variant="outline">Copy field</Badge>
+                              ) : null}
+                              {isIconLink ? <Badge variant="outline">Icon</Badge> : null}
+                              {isHidden ? <Badge variant="secondary">Hidden</Badge> : null}
                             </div>
+                            <div className="text-muted-foreground mt-1 truncate text-sm">
+                              {link.linkType === 'COPY_FIELD' ? link.url : link.url}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                handleUpdateLink(link.id, {
+                                  status: isHidden ? 'ACTIVE' : 'HIDDEN',
+                                })
+                              }
+                              title={isHidden ? 'Show link' : 'Hide link'}
+                            >
+                              <span className="sr-only">{isHidden ? 'Show' : 'Hide'}</span>
+                              {isHidden ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                            </Button>
+
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openEditLinkDialog(link)}
+                            >
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Edit
+                            </Button>
+
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleArchiveLink(link.id)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <span className="sr-only">Delete</span>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
                         </div>
                       );
@@ -969,6 +1055,134 @@ export function ProfileEditor({
                 )}
               </CardContent>
             </Card>
+
+            <Dialog open={editLinkOpen} onOpenChange={closeEditLinkDialog}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingLink?.linkType === 'COPY_FIELD' ? 'Edit Copy Field' : 'Edit Link'}
+                  </DialogTitle>
+                  <DialogDescription>Update the title, destination, and icon display.</DialogDescription>
+                </DialogHeader>
+
+                <div className="grid gap-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-1">
+                      <Label htmlFor="editLinkTitle">Title</Label>
+                      <Input
+                        id="editLinkTitle"
+                        value={editLinkTitle}
+                        onChange={(e) => setEditLinkTitle(e.target.value)}
+                        placeholder={editLinkType === 'COPY_FIELD' ? 'Bitcoin Wallet' : 'Instagram'}
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label htmlFor="editLinkUrl">
+                        {editLinkType === 'COPY_FIELD' ? 'Text to Copy' : 'URL'}
+                      </Label>
+                      <Input
+                        id="editLinkUrl"
+                        value={editLinkUrl}
+                        onChange={(e) => setEditLinkUrl(e.target.value)}
+                        placeholder={
+                          editLinkType === 'COPY_FIELD'
+                            ? 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh'
+                            : 'https://instagram.com/yourname'
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <div className="space-y-1">
+                      <Label>Type</Label>
+                      <Select
+                        value={editLinkType}
+                        onValueChange={(value) => {
+                          const nextType = value as 'URL' | 'COPY_FIELD';
+                          setEditLinkType(nextType);
+                          if (nextType === 'COPY_FIELD') {
+                            setEditLinkDisplay('button');
+                          }
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="URL">Link</SelectItem>
+                          <SelectItem value="COPY_FIELD">Copy Field</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label>Status</Label>
+                      <Select
+                        value={editLinkStatus}
+                        onValueChange={(value) =>
+                          setEditLinkStatus(value as 'ACTIVE' | 'HIDDEN' | 'ARCHIVED')
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="ACTIVE">Active</SelectItem>
+                          <SelectItem value="HIDDEN">Hidden</SelectItem>
+                          <SelectItem value="ARCHIVED">Archived</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label>Show as</Label>
+                      <Select
+                        value={editLinkDisplay}
+                        onValueChange={(value) => setEditLinkDisplay(value as 'button' | 'icon')}
+                        disabled={editLinkType !== 'URL' || !editLinkIcon.trim()}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Display" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="button">Button</SelectItem>
+                          <SelectItem value="icon">Icon row</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {editLinkType !== 'URL' ? (
+                        <p className="text-muted-foreground text-xs">Copy fields are always shown as buttons.</p>
+                      ) : !editLinkIcon.trim() ? (
+                        <p className="text-muted-foreground text-xs">Pick an icon to enable icon-row display.</p>
+                      ) : (
+                        <p className="text-muted-foreground text-xs">Show this link as a button or in the top icon row.</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="max-w-xs">
+                    <IconPicker
+                      id="editLinkIcon"
+                      value={editLinkIcon || undefined}
+                      onChange={(value) => {
+                        setEditLinkIcon(value);
+                        if (!value) setEditLinkDisplay('button');
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => closeEditLinkDialog(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="button" onClick={handleSaveEditedLink}>
+                    Save
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </TabsContent>
 
           {/* Pages Tab */}

@@ -1,13 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { prisma } from '@/lib/prisma';
 import { detectDeviceType } from '@/lib/device-detect';
-
-function getCountryFromRequest(request: NextRequest): string | null {
-  // Simple implementation - you can enhance this later
-  const country =
-    request.headers.get('x-country') || request.headers.get('cf-ipcountry') || request.geo?.country;
-  return country || null;
-}
+import { getCountryFromRequest } from '@/lib/geo';
 
 export async function GET(request: NextRequest, { params }: { params: { slug: string } }) {
   try {
@@ -36,7 +31,7 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
     }
 
     // Get analytics data
-    const country = await getCountryFromRequest(request);
+    const country = getCountryFromRequest(request);
     const deviceType = detectDeviceType(request.headers.get('user-agent') || '');
     const referrer = request.headers.get('referer') || '';
 

@@ -16,8 +16,12 @@ export type Page = {
   icon: string | null;
   isPublished: boolean;
   order: number;
-  createdAt: Date;
-  updatedAt: Date;
+  /**
+   * These values come from JSON responses, so dates are represented as ISO strings.
+   * (Do not pass Date objects directly to client components.)
+   */
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 // Form state types used in UI components

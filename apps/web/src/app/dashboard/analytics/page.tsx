@@ -33,8 +33,15 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
   const retentionDays = getAnalyticsRetentionDays(subscriptionTier);
   const retentionCutoffDate = getAnalyticsRetentionCutoffDate(subscriptionTier);
 
-  const range = searchParams.range || '7';
-  const daysAgo = parseInt(range);
+  const rawRange = searchParams.range;
+  const parsedRange = rawRange ? parseInt(rawRange, 10) : NaN;
+  const requestedDays = Number.isFinite(parsedRange) ? parsedRange : retentionDays;
+  const normalizedRequestedDays = requestedDays > 0 ? requestedDays : retentionDays;
+  const effectiveDays = Math.min(normalizedRequestedDays, retentionDays);
+
+  // Used for URL building + selector highlighting
+  const range = String(effectiveDays);
+  const daysAgo = normalizedRequestedDays;
 
   const profiles = await prisma.profile.findMany({
     where: { userId: user.id, deletedAt: null },
@@ -70,23 +77,18 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
     );
   }
 
-  const requestedStartDate =
-    daysAgo === 0 ? new Date(0) : new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
+  const requestedStartDate = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
 
   const startDate = getEffectiveStartDate({
     requestedStartDate,
     retentionCutoffDate,
   });
 
-  const isRetentionLimitingRange = requestedStartDate < retentionCutoffDate;
+  const isRetentionLimitingRange = normalizedRequestedDays > retentionDays;
 
-  const totalClicksDescription = (() => {
-    if (daysAgo === 0) return `Last ${retentionDays} days`;
-    if (isRetentionLimitingRange) {
-      return `Last ${daysAgo} days (limited to ${retentionDays} days)`;
-    }
-    return `Last ${daysAgo} days`;
-  })();
+  const totalClicksDescription = isRetentionLimitingRange
+    ? `Last ${daysAgo} days (limited to ${retentionDays} days)`
+    : `Last ${effectiveDays} days`;
 
   const [totalClicks, analytics, topLinks, topPages, countries, devices, referrers] = await Promise.all([
     prisma.analytics.count({
@@ -238,7 +240,11 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
             ) : null}
 
             <div className="flex flex-wrap gap-2">
-              <DateRangeSelector currentRange={range} profileId={selectedProfileId} />
+              <DateRangeSelector
+                currentRange={range}
+                profileId={selectedProfileId}
+                retentionDays={retentionDays}
+              />
               <Button variant="outline" asChild>
                 <a href={`/dashboard/analytics/export?profile=${selectedProfileId}&range=${range}`}>
                   Export CSV

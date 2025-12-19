@@ -2,12 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/prisma';
 import { detectDeviceType } from '@/lib/device-detect';
-
-function getCountryFromHeaders(headers: Headers) {
-  return (
-    headers.get('x-vercel-ip-country') || headers.get('cf-ipcountry') || headers.get('x-country')
-  );
-}
+import { getCountryFromRequest } from '@/lib/geo';
 
 export async function POST(request: Request, { params }: { params: { pageId: string } }) {
   const page = await prisma.page.findFirst({
@@ -30,13 +25,13 @@ export async function POST(request: Request, { params }: { params: { pageId: str
 
   const userAgent = request.headers.get('user-agent');
   const referrer = request.headers.get('referer');
-  const country = getCountryFromHeaders(request.headers);
+  const country = getCountryFromRequest(request);
 
   try {
     await prisma.pageAnalytics.create({
       data: {
         pageId: page.id,
-        country: country ? country.slice(0, 2) : null,
+        country,
         referrer: referrer ? referrer.slice(0, 2048) : null,
         deviceType: detectDeviceType(userAgent),
         userAgent: userAgent ? userAgent.slice(0, 2048) : null,

@@ -160,17 +160,19 @@ export function ProfilePreview({
 
         <div className="mt-8 space-y-3">
           {buttonLinks.map((l) => {
+            const md = getLinkMetadata(l);
+            const Icon = md.icon ? iconMap[String(md.icon).toLowerCase()] : null;
+
             if (l.linkType === 'COPY_FIELD') {
-              // Render copy field UI
               return (
                 <div key={l.id} className="group">
                   <div className="flex items-center justify-between gap-3 rounded-lg border border-white/15 bg-white/5 p-3">
                     <div className="flex min-w-0 flex-1 items-center gap-3">
-                      {l.metadata && typeof l.metadata === 'object' && (l.metadata as any).icon && (
+                      {md.icon ? (
                         <div className="rounded-lg bg-white/10 p-2">
-                          <Globe className="h-4 w-4" />
+                          {Icon ? <Icon className="h-4 w-4" /> : <Globe className="h-4 w-4" />}
                         </div>
-                      )}
+                      ) : null}
                       <div className="min-w-0 flex-1">
                         <p className="mb-1 text-sm font-medium">{l.title}</p>
                         <input
@@ -187,14 +189,14 @@ export function ProfilePreview({
                         try {
                           await navigator.clipboard.writeText(l.url);
                           toast({
-                            title: "Copied!",
+                            title: 'Copied!',
                             description: `${l.title} copied to clipboard`,
                           });
                         } catch (err) {
                           toast({
-                            title: "Failed to copy",
-                            description: "Please try again",
-                            variant: "destructive",
+                            title: 'Failed to copy',
+                            description: 'Please try again',
+                            variant: 'destructive',
                           });
                         }
                       }}
@@ -211,7 +213,6 @@ export function ProfilePreview({
               );
             }
 
-            // Regular clickable link
             return (
               <a
                 key={l.id}
@@ -223,7 +224,10 @@ export function ProfilePreview({
                   borderRadius: theme.buttonRadius,
                 }}
               >
-                {l.title}
+                <span className="inline-flex items-center justify-center gap-2">
+                  {md.icon ? (Icon ? <Icon className="h-4 w-4" /> : <Globe className="h-4 w-4" />) : null}
+                  {l.title}
+                </span>
               </a>
             );
           })}
