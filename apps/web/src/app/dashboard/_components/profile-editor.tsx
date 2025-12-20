@@ -579,7 +579,11 @@ export function ProfileEditor({
               </TabsContent>
 
               <TabsContent value="settings" className="mt-0">
-                <SettingsSection profile={profileState} profiles={profiles} />
+                <SettingsSection
+                  user={{ id: user.id, subscriptionTier: user.subscriptionTier }}
+                  profile={profileState}
+                  profiles={profiles}
+                />
               </TabsContent>
             </div>
           </Tabs>

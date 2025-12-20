@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
-import { useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import {
   Plus,
   GripVertical,
@@ -14,8 +13,6 @@ import {
   ChevronDown,
   FileText,
   MousePointer2,
-  Type,
-  ChevronDown as ExpandIcon,
 } from 'lucide-react';
 import { cn } from '@acme/ui';
 import { Button } from '@acme/ui';
@@ -24,7 +21,7 @@ import { Label } from '@acme/ui';
 import { Textarea } from '@acme/ui';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@acme/ui';
 import { Switch } from '@acme/ui';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@acme/ui';
+import { Card, CardContent, CardHeader, CardTitle } from '@acme/ui';
 import { toast } from '@acme/ui';
 
 import type { Block, BlockType, BlockContent } from '@/types/blocks';
@@ -37,7 +34,14 @@ import {
   getBlockTypeConfig,
 } from '@/lib/block-types';
 import { BlockType as BlockTypeEnum } from '@/lib/block-types';
-import { BlockRenderer, BlockListRenderer } from '@/components/block-renderer';
+import { BlockListRenderer } from '@/components/block-renderer';
+
+const blockTypeIcons = {
+  FileText,
+  MousePointer2,
+  Copy,
+  ChevronDown,
+} as const;
 
 // Block Editor Props
 interface BlockEditorProps {
@@ -160,12 +164,7 @@ export function BlockEditor({ blocks, onBlocksChange, className }: BlockEditorPr
               {Object.values(BlockTypeEnum).map((type) => {
                 const config = getBlockTypeConfig(type);
                 const IconComponent =
-                  {
-                    FileText,
-                    MousePointer2,
-                    Copy,
-                    ChevronDown,
-                  }[config.icon as keyof typeof import('lucide-react')] || FileText;
+                  blockTypeIcons[config.icon as keyof typeof blockTypeIcons] ?? FileText;
 
                 return (
                   <Button
@@ -201,12 +200,7 @@ export function BlockEditor({ blocks, onBlocksChange, className }: BlockEditorPr
             .map((block) => {
               const config = getBlockTypeConfig(block.type);
               const IconComponent =
-                {
-                  FileText,
-                  MousePointer2,
-                  Copy,
-                  ChevronDown,
-                }[config.icon as keyof typeof import('lucide-react')] || FileText;
+                blockTypeIcons[config.icon as keyof typeof blockTypeIcons] ?? FileText;
 
               return (
                 <div

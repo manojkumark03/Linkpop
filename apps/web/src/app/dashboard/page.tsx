@@ -309,17 +309,6 @@ export default async function DashboardPage({
               customHeadScript: profile.customHeadScript,
               customBodyScript: profile.customBodyScript,
             }}
-            links={profile.links.map((l) => ({
-              id: l.id,
-              profileId: l.profileId,
-              slug: l.slug,
-              title: l.title,
-              url: l.url,
-              linkType: l.linkType,
-              position: l.position,
-              metadata: l.metadata,
-              status: l.status,
-            }))}
             pages={profile.pages.map((p) => ({
               id: p.id,
               profileId: p.profileId,

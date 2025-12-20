@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { requireAuth } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
@@ -55,15 +56,17 @@ export default async function DesignPage({ params }: DesignPageProps) {
           image: profile.image,
           themeSettings: normalizeThemeSettings(profile.themeSettings),
         }}
-        links={profile.links.map((l) => ({
-          id: l.id,
-          title: l.title,
-          url: l.url,
-          linkType: l.linkType,
-          status: l.status,
-          deletedAt: l.deletedAt,
-          metadata: l.metadata,
-        }))}
+        links={profile.links
+          .filter((l) => l.linkType !== 'BLOCK')
+          .map((l) => ({
+            id: l.id,
+            title: l.title,
+            url: l.url,
+            linkType: l.linkType as 'URL' | 'COPY_FIELD',
+            status: l.status,
+            deletedAt: l.deletedAt,
+            metadata: l.metadata,
+          }))}
         pages={profile.pages.map((p) => ({
           id: p.id,
           title: p.title,

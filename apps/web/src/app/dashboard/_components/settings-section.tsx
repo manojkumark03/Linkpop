@@ -46,6 +46,10 @@ import { updateProfileAction, deleteProfileAction } from '../actions';
 import type { ThemeSettings } from '@/lib/theme-settings';
 
 interface SettingsSectionProps {
+  user: {
+    id: string;
+    subscriptionTier: 'FREE' | 'PRO';
+  };
   profile: EditorProfile;
   profiles: Array<{
     id: string;
@@ -56,7 +60,7 @@ interface SettingsSectionProps {
   }>;
 }
 
-export function SettingsSection({ profile, profiles }: SettingsSectionProps) {
+export function SettingsSection({ user, profile, profiles }: SettingsSectionProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -381,14 +385,14 @@ export function SettingsSection({ profile, profiles }: SettingsSectionProps) {
           </DialogHeader>
           <div className="py-4">
             <CustomScriptsEditor
-              profile={profile}
-              onSave={() => {
-                toast({
-                  title: 'Scripts saved',
-                  description: 'Your custom scripts have been saved',
-                });
+              profileId={profile.id}
+              user={user}
+              initialScripts={{
+                customHeadScript: profile.customHeadScript,
+                customBodyScript: profile.customBodyScript,
+              }}
+              onSaved={() => {
                 setScriptsOpen(false);
-                router.refresh();
               }}
             />
           </div>

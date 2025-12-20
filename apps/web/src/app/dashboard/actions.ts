@@ -7,7 +7,8 @@ import { requireAuth } from '@/lib/auth-helpers';
 import { createLinkSchema, reorderLinksSchema, updateLinkSchema } from '@/lib/validations/links';
 import { createProfileSchema, updateProfileSchema } from '@/lib/validations/profiles';
 import { slugify } from '@/lib/slugs';
-import type { Block, BlockContent, BlockType } from '@/types/blocks';
+import { createDefaultBlockContent } from '@/lib/block-types';
+import type { Block, BlockContent } from '@/types/blocks';
 import { BlockType } from '@/types/blocks';
 
 export async function createProfileAction(input: unknown) {
@@ -109,8 +110,6 @@ export async function updateProfileAction(profileId: string, input: unknown) {
       image: result.data.image,
       status: result.data.status,
       themeSettings: mergedThemeSettings ? mergedThemeSettings : undefined,
-      customHeadScript: result.data.customHeadScript,
-      customBodyScript: result.data.customBodyScript,
     },
   });
 
@@ -201,7 +200,7 @@ export async function updateLinkAction(linkId: string, input: unknown) {
       url: result.data.url,
       linkType: result.data.linkType,
       status: result.data.status,
-      metadata: result.data.metadata,
+      metadata: result.data.metadata as any,
     },
   });
 
@@ -327,7 +326,7 @@ export async function duplicateProfileAction(profileId: string, input: unknown) 
         userId: user.id,
         slug,
         displayName: displayName || undefined,
-        themeSettings: profile.themeSettings,
+        themeSettings: profile.themeSettings as any,
       },
     });
 
@@ -342,7 +341,7 @@ export async function duplicateProfileAction(profileId: string, input: unknown) 
           linkType: link.linkType,
           position: link.position,
           status: link.status,
-          metadata: link.metadata,
+          metadata: link.metadata as any,
         })),
       });
     }
@@ -736,7 +735,7 @@ export async function createBlockAction(input: {
       pageId: input.pageId,
       type: input.type,
       order: input.order,
-      content: input.content,
+      content: input.content as any,
     },
   });
 
@@ -777,7 +776,10 @@ export async function updateBlockAction(
 
   const updatedBlock = await prisma.block.update({
     where: { id: blockId },
-    data: input,
+    data: {
+      order: input.order,
+      content: input.content as any,
+    },
   });
 
   revalidatePath('/dashboard');
@@ -840,13 +842,26 @@ export async function getBlocksForPage(pageId: string) {
     orderBy: { order: 'asc' },
   });
 
-  return {
-    ok: true as const,
-    blocks: blocks.map((block) => ({
-      ...block,
+  const mappedBlocks: Block[] = blocks.map((block) => {
+    const content =
+      block.content && typeof block.content === 'object'
+        ? (block.content as unknown as BlockContent)
+        : createDefaultBlockContent(block.type as unknown as BlockType);
+
+    return {
+      id: block.id,
+      type: block.type as unknown as BlockType,
+      content,
+      order: block.order,
+      pageId: block.pageId,
       createdAt: block.createdAt.toISOString(),
       updatedAt: block.updatedAt.toISOString(),
-    })),
+    };
+  });
+
+  return {
+    ok: true as const,
+    blocks: mappedBlocks,
   };
 }
 

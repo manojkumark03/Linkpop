@@ -30,9 +30,15 @@ type CustomScriptsEditorProps = {
     customHeadScript?: string | null;
     customBodyScript?: string | null;
   };
+  onSaved?: () => void;
 };
 
-export function CustomScriptsEditor({ profileId, user, initialScripts }: CustomScriptsEditorProps) {
+export function CustomScriptsEditor({
+  profileId,
+  user,
+  initialScripts,
+  onSaved,
+}: CustomScriptsEditorProps) {
   const router = useRouter();
   const [customHeadScript, setCustomHeadScript] = useState(initialScripts?.customHeadScript || '');
   const [customBodyScript, setCustomBodyScript] = useState(initialScripts?.customBodyScript || '');
@@ -42,8 +48,7 @@ export function CustomScriptsEditor({ profileId, user, initialScripts }: CustomS
     setSaving(true);
 
     try {
-      const result = await updateCustomScriptsAction({
-        profileId,
+      const result = await updateCustomScriptsAction(profileId, {
         customHeadScript: customHeadScript.trim() || undefined,
         customBodyScript: customBodyScript.trim() || undefined,
       });
@@ -57,6 +62,7 @@ export function CustomScriptsEditor({ profileId, user, initialScripts }: CustomS
         description: 'Your custom scripts have been updated successfully.',
       });
 
+      onSaved?.();
       router.refresh();
     } catch (error) {
       toast({

@@ -14,7 +14,13 @@ import { cn } from '@acme/ui';
 import { Button } from '@acme/ui';
 import { toast } from '@acme/ui';
 
-import type { Block } from '@/types/blocks';
+import type {
+  Block,
+  ButtonBlockContent,
+  CopyTextBlockContent,
+  ExpandBlockContent,
+  MarkdownBlockContent,
+} from '@/types/blocks';
 import { getButtonColorClass } from '@/lib/block-types';
 
 interface BlockRendererProps {
@@ -31,7 +37,9 @@ export function BlockRenderer({
   className,
 }: BlockRendererProps) {
   const [copied, setCopied] = useState(false);
-  const [expanded, setExpanded] = useState(block.content.isOpen || false);
+  const [expanded, setExpanded] = useState(
+    block.type === 'EXPAND' ? ((block.content as ExpandBlockContent).isOpen ?? false) : false,
+  );
   const [iframeLoading, setIframeLoading] = useState(false);
 
   const handleCopyText = async (text: string) => {
@@ -115,23 +123,28 @@ export function BlockRenderer({
   };
 
   switch (block.type) {
-    case 'MARKDOWN':
+    case 'MARKDOWN': {
+      const content = block.content as MarkdownBlockContent;
+
       return (
         <div className={cn('markdown-block block', className)}>
-          <div className="prose prose-sm max-w-none">{renderMarkdown(block.content.text)}</div>
+          <div className="prose prose-sm max-w-none">{renderMarkdown(content.text)}</div>
         </div>
       );
+    }
 
-    case 'BUTTON':
-      const buttonStyle = getButtonColorClass(block.content.color);
-      const sizeClass = {
-        small: 'px-3 py-1.5 text-sm',
-        medium: 'px-4 py-2 text-base',
-        large: 'px-6 py-3 text-lg',
-      }[block.content.size];
+    case 'BUTTON': {
+      const content = block.content as ButtonBlockContent;
+      const buttonStyle = getButtonColorClass(content.color);
+      const sizeClass =
+        {
+          small: 'px-3 py-1.5 text-sm',
+          medium: 'px-4 py-2 text-base',
+          large: 'px-6 py-3 text-lg',
+        }[content.size] ?? 'px-4 py-2 text-base';
 
       const styleClass =
-        block.content.style === 'outline' ? `${buttonStyle} border-2 bg-transparent` : buttonStyle;
+        content.style === 'outline' ? `${buttonStyle} border-2 bg-transparent` : buttonStyle;
 
       return (
         <div className={cn('button-block block', className)}>
@@ -143,33 +156,36 @@ export function BlockRenderer({
               'hover:scale-105 active:scale-95',
               isPreview && 'pointer-events-none',
             )}
-            onClick={() => handleButtonClick(block.content.url)}
+            onClick={() => handleButtonClick(content.url)}
             disabled={isPreview || !isInteractive}
           >
             <MousePointer2 className="mr-2 h-4 w-4" />
-            {block.content.label}
+            {content.label}
             <ExternalLink className="ml-2 h-4 w-4" />
           </Button>
         </div>
       );
+    }
 
-    case 'COPY_TEXT':
+    case 'COPY_TEXT': {
+      const content = block.content as CopyTextBlockContent;
+
       return (
         <div className={cn('copy-text-block block', className)}>
           <div className="relative">
             <div className="flex items-center gap-2 rounded-lg border bg-gray-50 p-3 dark:bg-gray-800">
               <div className="min-w-0 flex-1">
-                {block.content.label && (
+                {content.label && (
                   <p className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">
-                    {block.content.label}
+                    {content.label}
                   </p>
                 )}
-                <p className="break-all font-mono text-sm">{block.content.text}</p>
+                <p className="break-all font-mono text-sm">{content.text}</p>
               </div>
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => handleCopyText(block.content.text)}
+                onClick={() => handleCopyText(content.text)}
                 disabled={isPreview || !isInteractive}
                 className="shrink-0"
               >
@@ -183,8 +199,10 @@ export function BlockRenderer({
           </div>
         </div>
       );
+    }
 
-    case 'EXPAND':
+    case 'EXPAND': {
+      const content = block.content as ExpandBlockContent;
       const isOpen = expanded;
 
       return (
@@ -195,20 +213,20 @@ export function BlockRenderer({
             onToggle={(e) => setExpanded(e.currentTarget.open)}
           >
             <summary className="flex cursor-pointer list-none items-center justify-between rounded-lg border bg-gray-50 p-3 transition-colors hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700">
-              <h3 className="text-sm font-medium">{block.content.title}</h3>
+              <h3 className="text-sm font-medium">{content.title}</h3>
               <ChevronDown
                 className={cn('h-4 w-4 transition-transform duration-200', isOpen && 'rotate-180')}
               />
             </summary>
 
             <div className="mt-2 rounded-lg border bg-white p-4 dark:bg-gray-900">
-              {block.content.contentType === 'markdown' && (
+              {content.contentType === 'markdown' && (
                 <div className="prose prose-sm max-w-none">
-                  {renderMarkdown(block.content.markdown || '')}
+                  {renderMarkdown(content.markdown || '')}
                 </div>
               )}
 
-              {block.content.contentType === 'iframe' && (
+              {content.contentType === 'iframe' && (
                 <div className="relative">
                   {iframeLoading && (
                     <div className="flex items-center justify-center p-8">
@@ -217,24 +235,24 @@ export function BlockRenderer({
                     </div>
                   )}
                   <iframe
-                    src={block.content.iframeUrl}
+                    src={content.iframeUrl ?? ''}
                     className="h-64 w-full rounded"
                     onLoad={() => setIframeLoading(false)}
                     onError={() => setIframeLoading(false)}
                     style={{ display: iframeLoading ? 'none' : 'block' }}
-                    title={block.content.title}
+                    title={content.title}
                   />
                 </div>
               )}
 
-              {block.content.contentType === 'both' && (
+              {content.contentType === 'both' && (
                 <div className="space-y-4">
-                  {block.content.markdown && (
+                  {content.markdown && (
                     <div className="prose prose-sm max-w-none">
-                      {renderMarkdown(block.content.markdown)}
+                      {renderMarkdown(content.markdown)}
                     </div>
                   )}
-                  {block.content.iframeUrl && (
+                  {content.iframeUrl && (
                     <div className="relative">
                       {iframeLoading && (
                         <div className="flex items-center justify-center p-8">
@@ -243,12 +261,12 @@ export function BlockRenderer({
                         </div>
                       )}
                       <iframe
-                        src={block.content.iframeUrl}
+                        src={content.iframeUrl}
                         className="h-64 w-full rounded"
                         onLoad={() => setIframeLoading(false)}
                         onError={() => setIframeLoading(false)}
                         style={{ display: iframeLoading ? 'none' : 'block' }}
-                        title={block.content.title}
+                        title={content.title}
                       />
                     </div>
                   )}
@@ -258,6 +276,7 @@ export function BlockRenderer({
           </details>
         </div>
       );
+    }
 
     default:
       return (
