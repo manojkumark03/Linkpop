@@ -7,8 +7,8 @@ import { requireAuth } from '@/lib/auth-helpers';
 import { createLinkSchema, reorderLinksSchema, updateLinkSchema } from '@/lib/validations/links';
 import { createProfileSchema, updateProfileSchema } from '@/lib/validations/profiles';
 import { slugify } from '@/lib/slugs';
-import type { Block, BlockContent, BlockType } from '@/types/blocks';
-import { BlockType } from '@/types/blocks';
+import { createDefaultBlockContent } from '@/lib/block-types';
+import { BlockType, type Block, type BlockContent } from '@/types/blocks';
 
 export async function createProfileAction(input: unknown) {
   const user = await requireAuth();
@@ -830,9 +830,13 @@ export async function updateBlockAction(blockId: string, input: unknown) {
     return { ok: false as const, error: 'Block not found' };
   }
 
-  const updates: any = {};
-  if ('order' in input) updates.order = input.order;
-  if ('content' in input) updates.content = input.content;
+  const updates: Record<string, unknown> = {};
+
+  if (typeof input === 'object' && input !== null) {
+    const data = input as Partial<{ order: number; content: BlockContent }>;
+    if (typeof data.order === 'number') updates.order = data.order;
+    if (data.content !== undefined) updates.content = data.content as any;
+  }
 
   const updatedBlock = await prisma.block.update({
     where: { id: blockId },
@@ -978,12 +982,23 @@ export async function getBlocksForLink(linkId: string) {
     orderBy: { order: 'asc' },
   });
 
-  return {
-    ok: true as const,
-    blocks: blocks.map((block) => ({
-      ...block,
+  const mappedBlocks: Block[] = blocks.map((block) => {
+    const type = block.type as unknown as BlockType;
+    const content = (block.content ?? createDefaultBlockContent(type)) as unknown as BlockContent;
+
+    return {
+      id: block.id,
+      linkId: block.linkId,
+      type,
+      order: block.order,
+      content,
       createdAt: block.createdAt.toISOString(),
       updatedAt: block.updatedAt.toISOString(),
-    })),
+    };
+  });
+
+  return {
+    ok: true as const,
+    blocks: mappedBlocks,
   };
 }

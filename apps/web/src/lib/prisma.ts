@@ -1,15 +1,26 @@
 import { PrismaClient } from '@prisma/client';
 
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL is not set. Please add it to your .env file.');
-}
-
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    errorFormat: process.env.NODE_ENV === 'development' ? 'pretty' : 'minimal',
-  });
+const databaseUrl = process.env['DATABASE_URL'];
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+const prismaClient =
+  globalForPrisma.prisma ??
+  (databaseUrl
+    ? new PrismaClient({
+        errorFormat: process.env.NODE_ENV === 'development' ? 'pretty' : 'minimal',
+      })
+    : null);
+
+export const prisma: PrismaClient =
+  prismaClient ??
+  (new Proxy(
+    {},
+    {
+      get() {
+        throw new Error('DATABASE_URL is not set. Please add it to your .env file.');
+      },
+    },
+  ) as PrismaClient);
+
+if (process.env.NODE_ENV !== 'production' && prismaClient) globalForPrisma.prisma = prismaClient;

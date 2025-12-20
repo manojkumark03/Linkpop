@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useTransition } from 'react';
+import type { LucideIcon } from 'lucide-react';
 import {
   Plus,
   GripVertical,
@@ -14,8 +15,6 @@ import {
   ChevronDown,
   FileText,
   MousePointer2,
-  Type,
-  ChevronDown as ExpandIcon,
 } from 'lucide-react';
 import { cn } from '@acme/ui';
 import { Button } from '@acme/ui';
@@ -28,7 +27,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@acme
 import { toast } from '@acme/ui';
 import { Separator } from '@acme/ui';
 
-import type { Block, BlockType, BlockContent } from '@/types/blocks';
+import { BlockType, type Block, type BlockContent } from '@/types/blocks';
 import {
   createDefaultBlockContent,
   validateBlockContent,
@@ -38,6 +37,13 @@ import {
   getBlockTypeConfig,
 } from '@/lib/block-types';
 import { BlockRenderer, BlockListRenderer } from '@/components/block-renderer';
+
+const blockTypeIconMap: Record<string, LucideIcon> = {
+  FileText,
+  MousePointer2,
+  Copy,
+  ChevronDown,
+};
 
 // Block Editor Props
 interface BlockEditorProps {
@@ -159,13 +165,7 @@ export function BlockEditor({ blocks, onBlocksChange, className }: BlockEditorPr
             <CardContent className="space-y-2">
               {Object.values(BlockType).map((type) => {
                 const config = getBlockTypeConfig(type);
-                const IconComponent =
-                  {
-                    FileText,
-                    MousePointer2,
-                    Copy,
-                    ChevronDown,
-                  }[config.icon as keyof typeof import('lucide-react')] || FileText;
+                const IconComponent = blockTypeIconMap[config.icon] ?? FileText;
 
                 return (
                   <Button
@@ -200,13 +200,7 @@ export function BlockEditor({ blocks, onBlocksChange, className }: BlockEditorPr
             .sort((a, b) => a.order - b.order)
             .map((block) => {
               const config = getBlockTypeConfig(block.type);
-              const IconComponent =
-                {
-                  FileText,
-                  MousePointer2,
-                  Copy,
-                  ChevronDown,
-                }[config.icon as keyof typeof import('lucide-react')] || FileText;
+              const IconComponent = blockTypeIconMap[config.icon] ?? FileText;
 
               return (
                 <div

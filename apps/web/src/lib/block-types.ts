@@ -1,4 +1,12 @@
-import { BlockType, type Block, type BlockContent } from '@/types/blocks';
+import {
+  BlockType,
+  type Block,
+  type BlockContent,
+  type ButtonBlockContent,
+  type CopyTextBlockContent,
+  type ExpandBlockContent,
+  type MarkdownBlockContent,
+} from '@/types/blocks';
 
 export const BLOCK_TYPE_CONFIG = {
   [BlockType.MARKDOWN]: {
@@ -75,52 +83,46 @@ export function validateBlockContent(
   const errors: string[] = [];
 
   switch (type) {
-    case BlockType.MARKDOWN:
-      if (!content.text || typeof content.text !== 'string' || content.text.trim().length === 0) {
+    case BlockType.MARKDOWN: {
+      const c = content as MarkdownBlockContent;
+      if (!c.text || typeof c.text !== 'string' || c.text.trim().length === 0) {
         errors.push('Text content is required');
       }
       break;
+    }
 
-    case BlockType.BUTTON:
-      if (
-        !content.label ||
-        typeof content.label !== 'string' ||
-        content.label.trim().length === 0
-      ) {
+    case BlockType.BUTTON: {
+      const c = content as ButtonBlockContent;
+      if (!c.label || typeof c.label !== 'string' || c.label.trim().length === 0) {
         errors.push('Button label is required');
       }
-      if (!content.url || typeof content.url !== 'string' || !isValidUrl(content.url)) {
+      if (!c.url || typeof c.url !== 'string' || !isValidUrl(c.url)) {
         errors.push('Valid URL is required');
       }
       break;
+    }
 
-    case BlockType.COPY_TEXT:
-      if (!content.text || typeof content.text !== 'string' || content.text.trim().length === 0) {
+    case BlockType.COPY_TEXT: {
+      const c = content as CopyTextBlockContent;
+      if (!c.text || typeof c.text !== 'string' || c.text.trim().length === 0) {
         errors.push('Text to copy is required');
       }
       break;
+    }
 
-    case BlockType.EXPAND:
-      if (
-        !content.title ||
-        typeof content.title !== 'string' ||
-        content.title.trim().length === 0
-      ) {
+    case BlockType.EXPAND: {
+      const c = content as ExpandBlockContent;
+      if (!c.title || typeof c.title !== 'string' || c.title.trim().length === 0) {
         errors.push('Section title is required');
       }
-      if (
-        content.contentType === 'markdown' &&
-        (!content.markdown || content.markdown.trim().length === 0)
-      ) {
+      if (c.contentType === 'markdown' && (!c.markdown || c.markdown.trim().length === 0)) {
         errors.push('Markdown content is required when content type is markdown');
       }
-      if (
-        content.contentType === 'iframe' &&
-        (!content.iframeUrl || !isValidUrl(content.iframeUrl))
-      ) {
+      if (c.contentType === 'iframe' && (!c.iframeUrl || !isValidUrl(c.iframeUrl))) {
         errors.push('Valid iframe URL is required when content type is iframe');
       }
       break;
+    }
   }
 
   return {
