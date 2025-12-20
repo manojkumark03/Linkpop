@@ -28,7 +28,7 @@ export const createLinkSchema = z
     profileId: z.string().min(1),
     title: z.string().min(1).max(120),
     url: z.string().min(1).max(500),
-    linkType: z.enum(['URL', 'COPY_FIELD']).optional(),
+    linkType: z.enum(['URL', 'COPY_FIELD', 'BLOCK']).optional(),
     slug: z
       .string()
       .min(2)
@@ -64,7 +64,7 @@ export const updateLinkSchema = z
   .object({
     title: z.string().min(1).max(120).optional(),
     url: z.string().min(1).max(500).optional(),
-    linkType: z.enum(['URL', 'COPY_FIELD']).optional(),
+    linkType: z.enum(['URL', 'COPY_FIELD', 'BLOCK']).optional(),
     status: z.enum(['ACTIVE', 'HIDDEN', 'ARCHIVED']).optional(),
     position: z.number().int().min(0).optional(),
     metadata: linkMetadataSchema.optional(),
