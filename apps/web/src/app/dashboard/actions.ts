@@ -7,6 +7,7 @@ import { requireAuth } from '@/lib/auth-helpers';
 import { createLinkSchema, reorderLinksSchema, updateLinkSchema } from '@/lib/validations/links';
 import { createProfileSchema, updateProfileSchema } from '@/lib/validations/profiles';
 import { slugify } from '@/lib/slugs';
+import { createDefaultBlockContent } from '@/lib/block-types';
 import type { Block, BlockContent, BlockType } from '@/types/blocks';
 import { BlockType } from '@/types/blocks';
 
@@ -840,13 +841,26 @@ export async function getBlocksForPage(pageId: string) {
     orderBy: { order: 'asc' },
   });
 
-  return {
-    ok: true as const,
-    blocks: blocks.map((block) => ({
-      ...block,
+  const mappedBlocks: Block[] = blocks.map((block) => {
+    const content =
+      block.content && typeof block.content === 'object'
+        ? (block.content as unknown as BlockContent)
+        : createDefaultBlockContent(block.type as unknown as BlockType);
+
+    return {
+      id: block.id,
+      type: block.type as unknown as BlockType,
+      content,
+      order: block.order,
+      pageId: block.pageId,
       createdAt: block.createdAt.toISOString(),
       updatedAt: block.updatedAt.toISOString(),
-    })),
+    };
+  });
+
+  return {
+    ok: true as const,
+    blocks: mappedBlocks,
   };
 }
 
