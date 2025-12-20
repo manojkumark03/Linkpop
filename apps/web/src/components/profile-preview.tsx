@@ -39,7 +39,7 @@ export type PreviewLink = {
   id: string;
   title: string;
   url: string;
-  linkType: 'URL' | 'COPY_FIELD';
+  linkType: 'URL' | 'COPY_FIELD' | 'BLOCK';
   status: 'ACTIVE' | 'HIDDEN' | 'ARCHIVED';
   deletedAt?: Date | null;
   metadata: Prisma.JsonValue;

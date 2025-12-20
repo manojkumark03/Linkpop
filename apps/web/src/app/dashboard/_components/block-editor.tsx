@@ -30,7 +30,6 @@ import { Separator } from '@acme/ui';
 
 import type { Block, BlockType, BlockContent } from '@/types/blocks';
 import {
-  BlockType,
   createDefaultBlockContent,
   validateBlockContent,
   BUTTON_COLORS,
