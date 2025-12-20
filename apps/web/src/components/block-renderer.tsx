@@ -31,7 +31,9 @@ export function BlockRenderer({
   className,
 }: BlockRendererProps) {
   const [copied, setCopied] = useState(false);
-  const [expanded, setExpanded] = useState(block.content.isOpen || false);
+  const [expanded, setExpanded] = useState(
+    block.type === 'EXPAND' ? ((block.content as any).isOpen ?? false) : false,
+  );
   const [iframeLoading, setIframeLoading] = useState(false);
 
   const handleCopyText = async (text: string) => {

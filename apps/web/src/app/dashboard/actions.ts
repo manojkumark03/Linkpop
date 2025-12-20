@@ -8,7 +8,7 @@ import { createLinkSchema, reorderLinksSchema, updateLinkSchema } from '@/lib/va
 import { createProfileSchema, updateProfileSchema } from '@/lib/validations/profiles';
 import { slugify } from '@/lib/slugs';
 import { createDefaultBlockContent } from '@/lib/block-types';
-import type { Block, BlockContent, BlockType } from '@/types/blocks';
+import type { Block, BlockContent } from '@/types/blocks';
 import { BlockType } from '@/types/blocks';
 
 export async function createProfileAction(input: unknown) {
@@ -110,8 +110,6 @@ export async function updateProfileAction(profileId: string, input: unknown) {
       image: result.data.image,
       status: result.data.status,
       themeSettings: mergedThemeSettings ? mergedThemeSettings : undefined,
-      customHeadScript: result.data.customHeadScript,
-      customBodyScript: result.data.customBodyScript,
     },
   });
 
@@ -202,7 +200,7 @@ export async function updateLinkAction(linkId: string, input: unknown) {
       url: result.data.url,
       linkType: result.data.linkType,
       status: result.data.status,
-      metadata: result.data.metadata,
+      metadata: result.data.metadata as any,
     },
   });
 
@@ -328,7 +326,7 @@ export async function duplicateProfileAction(profileId: string, input: unknown) 
         userId: user.id,
         slug,
         displayName: displayName || undefined,
-        themeSettings: profile.themeSettings,
+        themeSettings: profile.themeSettings as any,
       },
     });
 
@@ -343,7 +341,7 @@ export async function duplicateProfileAction(profileId: string, input: unknown) 
           linkType: link.linkType,
           position: link.position,
           status: link.status,
-          metadata: link.metadata,
+          metadata: link.metadata as any,
         })),
       });
     }
@@ -737,7 +735,7 @@ export async function createBlockAction(input: {
       pageId: input.pageId,
       type: input.type,
       order: input.order,
-      content: input.content,
+      content: input.content as any,
     },
   });
 
@@ -778,7 +776,10 @@ export async function updateBlockAction(
 
   const updatedBlock = await prisma.block.update({
     where: { id: blockId },
-    data: input,
+    data: {
+      order: input.order,
+      content: input.content as any,
+    },
   });
 
   revalidatePath('/dashboard');
