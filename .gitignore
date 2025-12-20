@@ -1,0 +1,34 @@
+# dependencies
+node_modules
+.pnp
+.pnp.js
+
+# next
+.next
+out
+
+# env
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# testing
+coverage
+playwright-report
+test-results
+
+# uploads
+apps/web/public/uploads/*
+!apps/web/public/uploads/.gitkeep
+
+# misc
+.DS_Store
+*.pem
