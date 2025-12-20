@@ -1,0 +1,147 @@
+import { NextResponse, type NextRequest } from 'next/server';
+
+import type { Page as PrismaPage } from '@prisma/client';
+
+import { prisma } from '@/lib/prisma';
+import { requireAuth } from '@/lib/auth-helpers';
+import { createPageSchema } from '@/lib/validations/pages';
+import type { Page, PageCreateResponse, PageListResponse } from '@/types/pages';
+
+function serializePage(page: PrismaPage): Page {
+  return {
+    ...page,
+    createdAt: page.createdAt.toISOString(),
+    updatedAt: page.updatedAt.toISOString(),
+  };
+}
+
+export async function POST(request: NextRequest, { params }: { params: { profileId: string } }) {
+  try {
+    const user = await requireAuth();
+    const { profileId } = params;
+
+    // Read request body only once to avoid "Body has already been read" error
+    const body = await request.json();
+
+    const result = createPageSchema.safeParse(body);
+    if (!result.success) {
+      console.error('Page creation validation failed:', {
+        profileId,
+        body,
+        errors: result.error.flatten(),
+      });
+
+      // Format validation errors in a more user-friendly way
+      const fieldErrors: Record<string, string> = {};
+      const formErrors = result.error.flatten().fieldErrors;
+
+      for (const [field, errors] of Object.entries(formErrors)) {
+        if (errors && errors.length > 0) {
+          fieldErrors[field] = errors[0]; // Take first error message
+        }
+      }
+
+      return NextResponse.json<PageCreateResponse>(
+        {
+          ok: false,
+          error: 'Invalid page data',
+          details: {
+            fieldErrors,
+            formErrors: result.error.flatten().formErrors,
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    const { title, slug, content, icon, isPublished, order } = result.data;
+
+    // Verify profile ownership
+    const profile = await prisma.profile.findFirst({
+      where: { id: profileId, userId: user.id, deletedAt: null },
+      select: { id: true },
+    });
+
+    if (!profile) {
+      return NextResponse.json<PageCreateResponse>(
+        { ok: false, error: 'Profile not found' },
+        { status: 404 },
+      );
+    }
+
+    // Check if slug already exists for this profile
+    const existing = await prisma.page.findUnique({
+      where: { profileId_slug: { profileId, slug } },
+    });
+
+    if (existing) {
+      return NextResponse.json<PageCreateResponse>(
+        { ok: false, error: 'Page with this slug already exists' },
+        { status: 400 },
+      );
+    }
+
+    // Calculate position if not provided
+    let position = order;
+    if (position === undefined) {
+      const maxOrder = await prisma.page.aggregate({
+        where: { profileId },
+        _max: { order: true },
+      });
+      position = (maxOrder._max.order ?? -1) + 1;
+    }
+
+    const page = await prisma.page.create({
+      data: {
+        profileId,
+        title,
+        slug,
+        content,
+        icon: icon ?? null,
+        isPublished: isPublished ?? true,
+        order: position,
+      },
+    });
+
+    return NextResponse.json<PageCreateResponse>({ ok: true, page: serializePage(page) });
+  } catch (error) {
+    console.error('Error creating page:', error);
+    return NextResponse.json<PageCreateResponse>(
+      { ok: false, error: 'Internal server error' },
+      { status: 500 },
+    );
+  }
+}
+
+export async function GET(_request: NextRequest, { params }: { params: { profileId: string } }) {
+  try {
+    const user = await requireAuth();
+    const { profileId } = params;
+
+    // Verify profile ownership
+    const profile = await prisma.profile.findFirst({
+      where: { id: profileId, userId: user.id, deletedAt: null },
+      select: { id: true },
+    });
+
+    if (!profile) {
+      return NextResponse.json<PageListResponse>(
+        { ok: false, error: 'Profile not found' },
+        { status: 404 },
+      );
+    }
+
+    const pages = await prisma.page.findMany({
+      where: { profileId },
+      orderBy: { order: 'asc' },
+    });
+
+    return NextResponse.json<PageListResponse>({ ok: true, pages: pages.map(serializePage) });
+  } catch (error) {
+    console.error('Error listing pages:', error);
+    return NextResponse.json<PageListResponse>(
+      { ok: false, error: 'Internal server error' },
+      { status: 500 },
+    );
+  }
+}
