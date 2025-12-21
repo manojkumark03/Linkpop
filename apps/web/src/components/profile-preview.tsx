@@ -4,18 +4,218 @@ import { useState, useEffect } from 'react';
 import type { Block } from '@/types/blocks';
 import { BlockTypeEnum } from '@/lib/block-types';
 
-interface ProfilePreviewProps {
+interface ProfileInfo {
+  slug: string;
+  displayName: string | null;
+  bio: string | null;
+  image: string | null;
+  themeSettings: any;
+}
+
+interface LinkInfo {
+  id: string;
+  title: string;
+  url: string;
+  linkType: 'URL' | 'COPY_FIELD';
+  status: string;
+  deletedAt: string | null;
+  metadata: any;
+}
+
+interface PageInfo {
+  id: string;
+  title: string;
+  slug: string;
+  icon: string | null;
+}
+
+interface PublicProfilePageProps {
+  profile: ProfileInfo;
+  elements: any[];
+  links?: LinkInfo[];
+  showQr?: boolean;
+  pages?: PageInfo[];
+}
+
+interface DashboardBuilderProps {
   profileId: string;
   blocks: Block[];
   className?: string;
 }
 
-export function ProfilePreview({ profileId, blocks, className = '' }: ProfilePreviewProps) {
-  const [isLoading, setIsLoading] = useState(false);
+type ProfilePreviewProps = PublicProfilePageProps | DashboardBuilderProps;
 
-  const profileElements = blocks
-    .filter((block) => block.parentType === 'PROFILE' && block.parentId === profileId)
-    .sort((a, b) => a.order - b.order);
+export function ProfilePreview(props: ProfilePreviewProps) {
+  const [isLoading] = useState(false);
+
+  // Type guard to check if this is the public profile page interface
+  const isPublicProfilePage = (props: ProfilePreviewProps): props is PublicProfilePageProps => {
+    return 'profile' in props && 'elements' in props;
+  };
+
+  // Type guard to check if this is the dashboard builder interface
+  const isDashboardBuilder = (props: ProfilePreviewProps): props is DashboardBuilderProps => {
+    return 'profileId' in props && 'blocks' in props;
+  };
+
+  if (isPublicProfilePage(props)) {
+    const { profile, elements, links, showQr, pages, className = '' } = props;
+    
+    return (
+      <div className={`space-y-4 ${className}`}>
+        <div className="text-center mb-6">
+          {profile.image && (
+            <img
+              src={profile.image}
+              alt={profile.displayName || profile.slug}
+              className="w-20 h-20 rounded-full mx-auto mb-4"
+            />
+          )}
+          <h1 className="text-2xl font-bold mb-2">{profile.displayName || profile.slug}</h1>
+          {profile.bio && (
+            <p className="text-gray-600 dark:text-gray-400 mb-4">{profile.bio}</p>
+          )}
+        </div>
+        
+        {/* Render new block-based elements */}
+        {elements && elements.length > 0 && (
+          <div className="space-y-3">
+            {elements.map((element: any) => {
+              // Handle different element types from the mapping
+              switch (element.type) {
+                case 'SOCIAL':
+                  return (
+                    <div key={element.id} className="bg-pink-50 border border-pink-200 rounded-lg p-4 text-center">
+                      <div className="text-sm font-medium text-pink-800">
+                        {element.content?.displayName || `Follow me on ${element.content?.platform}`}
+                      </div>
+                      {element.content?.username && (
+                        <div className="text-xs text-pink-600 mt-1">{element.content.username}</div>
+                      )}
+                    </div>
+                  );
+                  
+                case 'LINK':
+                  return (
+                    <a
+                      key={element.id}
+                      href={element.content?.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block bg-blue-500 hover:bg-blue-600 text-white rounded-lg p-4 text-center transition-colors"
+                    >
+                      <div className="text-sm font-medium">{element.content?.title}</div>
+                    </a>
+                  );
+                  
+                case 'COPY_TEXT':
+                  return (
+                    <div
+                      key={element.id}
+                      className="bg-green-50 border border-green-200 rounded-lg p-4 text-center"
+                    >
+                      <div className="text-sm">{element.content?.text}</div>
+                      {element.content?.label && (
+                        <div className="text-xs text-green-600 mt-1">{element.content.label}</div>
+                      )}
+                    </div>
+                  );
+                  
+                case 'MARKDOWN':
+                  return (
+                    <div key={element.id} className="prose prose-sm max-w-none">
+                      <div className="whitespace-pre-wrap text-sm text-gray-800">
+                        {element.content?.text}
+                      </div>
+                    </div>
+                  );
+                  
+                case 'EXPAND':
+                  return (
+                    <div key={element.id} className="border border-gray-200 rounded-lg overflow-hidden">
+                      <div className="bg-gray-50 p-3 text-sm font-medium text-gray-800">
+                        {element.content?.title}
+                      </div>
+                      {element.content?.markdown && (
+                        <div className="p-3 text-xs text-gray-600">
+                          {element.content.markdown}
+                        </div>
+                      )}
+                    </div>
+                  );
+                  
+                case 'BUTTON':
+                  return (
+                    <a
+                      key={element.id}
+                      href={element.content?.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block bg-blue-500 hover:bg-blue-600 text-white rounded-lg p-4 text-center transition-colors"
+                    >
+                      <div className="text-sm font-medium">{element.content?.label}</div>
+                    </a>
+                  );
+                  
+                default:
+                  return (
+                    <div key={element.id} className="border border-gray-200 rounded-lg p-4">
+                      <div className="text-xs text-gray-500">
+                        Unknown element type: {element.type}
+                      </div>
+                    </div>
+                  );
+              }
+            })}
+          </div>
+        )}
+
+        {/* Render legacy links */}
+        {links && links.length > 0 && (
+          <div className="space-y-3">
+            {links.map((link) => (
+              <a
+                key={link.id}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block bg-blue-500 hover:bg-blue-600 text-white rounded-lg p-4 text-center transition-colors"
+              >
+                {link.title}
+              </a>
+            ))}
+          </div>
+        )}
+
+        {/* Render pages if provided */}
+        {pages && pages.length > 0 && (
+          <div className="space-y-3">
+            {pages.map((page) => (
+              <a
+                key={page.id}
+                href={`/s/${page.slug}`}
+                className="block bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg p-4 text-center transition-colors"
+              >
+                {page.icon && <span className="mr-2">{page.icon}</span>}
+                {page.title}
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (isDashboardBuilder(props)) {
+    const { profileId, blocks, className = '' } = props;
+
+    if (!profileId || !blocks) {
+      return <div className={className}>Invalid props</div>;
+    }
+
+    const profileElements = blocks
+      .filter((block) => block.parentType === 'PROFILE' && block.parentId === profileId)
+      .sort((a, b) => a.order - b.order);
 
   const renderElement = (block: Block) => {
     const content = block.content as any;
