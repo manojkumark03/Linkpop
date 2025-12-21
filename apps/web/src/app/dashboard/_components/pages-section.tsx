@@ -519,7 +519,9 @@ export function PagesSection({ pages, profileId }: PagesSectionProps) {
             <DialogDescription>Add and arrange blocks to build your page content</DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            {editingPage && <BlockEditor blocks={blocks} onBlocksChange={setBlocks} />}
+            {editingPage && (
+              <BlockEditor blocks={blocks} onBlocksChange={setBlocks} pageId={editingPage.id} />
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={closeBlockEditor}>

@@ -132,7 +132,7 @@ describe('ContactRequest', () => {
       const result = contactSchema.safeParse(invalidData);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.errors[0].message).toBe('Name is required');
+        expect(result.error.issues[0].message).toBe('Name is required');
       }
     });
 
@@ -147,7 +147,7 @@ describe('ContactRequest', () => {
       const result = contactSchema.safeParse(invalidData);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.errors[0].message).toBe('Invalid email address');
+        expect(result.error.issues[0].message).toBe('Invalid email address');
       }
     });
 
@@ -162,7 +162,7 @@ describe('ContactRequest', () => {
       const result = contactSchema.safeParse(invalidData);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.errors[0].message).toBe('Message must be at least 10 characters');
+        expect(result.error.issues[0].message).toBe('Message must be at least 10 characters');
       }
     });
 
@@ -177,7 +177,7 @@ describe('ContactRequest', () => {
       const result = contactSchema.safeParse(invalidData);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.errors[0].message).toBe('Consent is required');
+        expect(result.error.issues[0].message).toBe('Consent is required');
       }
     });
 

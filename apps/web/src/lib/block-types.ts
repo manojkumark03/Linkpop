@@ -1,41 +1,48 @@
 import {
   BlockType,
-  type Block,
-  type BlockContent,
-  type ButtonBlockContent,
-  type CopyTextBlockContent,
-  type ExpandBlockContent,
-  type MarkdownBlockContent,
+  Block,
+  BlockContent,
+  ButtonBlockContent,
+  CopyTextBlockContent,
+  ExpandBlockContent,
+  MarkdownBlockContent,
 } from '@/types/blocks';
 
-export { BlockType };
+// Runtime values for BlockType
+export const BlockTypeEnum = {
+  BUTTON: 'BUTTON' as BlockType,
+  MARKDOWN: 'MARKDOWN' as BlockType,
+  EXPAND: 'EXPAND' as BlockType,
+  COPY_TEXT: 'COPY_TEXT' as BlockType,
+  PAGE: 'PAGE' as BlockType,
+} as const;
 
 export const BLOCK_TYPE_CONFIG = {
-  [BlockType.BUTTON]: {
+  [BlockTypeEnum.BUTTON]: {
     name: 'Button',
     description: 'Customizable button link',
     icon: 'MousePointer2',
     color: 'text-green-600',
   },
-  [BlockType.MARKDOWN]: {
+  [BlockTypeEnum.MARKDOWN]: {
     name: 'Markdown',
     description: 'Rich text content with formatting',
     icon: 'FileText',
     color: 'text-blue-600',
   },
-  [BlockType.EXPAND]: {
+  [BlockTypeEnum.EXPAND]: {
     name: 'Expand',
     description: 'Collapsible section with content',
     icon: 'ChevronDown',
     color: 'text-purple-600',
   },
-  [BlockType.COPY_TEXT]: {
+  [BlockTypeEnum.COPY_TEXT]: {
     name: 'Copy Text',
     description: 'Text that users can copy to clipboard',
     icon: 'Copy',
     color: 'text-orange-600',
   },
-  [BlockType.PAGE]: {
+  [BlockTypeEnum.PAGE]: {
     name: 'Page',
     description: 'A container with nested elements',
     icon: 'Layers',
@@ -49,13 +56,13 @@ export function getBlockTypeConfig(type: BlockType) {
 
 export function createDefaultBlockContent(type: BlockType): BlockContent {
   switch (type) {
-    case BlockType.MARKDOWN:
+    case BlockTypeEnum.MARKDOWN:
       return {
         text: '# Welcome to your page\n\nStart writing your content here...',
         preview: 'Welcome to your page',
       };
 
-    case BlockType.BUTTON:
+    case BlockTypeEnum.BUTTON:
       return {
         label: 'Click Me',
         url: 'https://example.com',
@@ -65,13 +72,13 @@ export function createDefaultBlockContent(type: BlockType): BlockContent {
         style: 'filled',
       };
 
-    case BlockType.COPY_TEXT:
+    case BlockTypeEnum.COPY_TEXT:
       return {
         text: 'hello@example.com',
         label: 'Email Address',
       };
 
-    case BlockType.EXPAND:
+    case BlockTypeEnum.EXPAND:
       return {
         title: 'Learn More',
         contentType: 'markdown',
@@ -79,7 +86,7 @@ export function createDefaultBlockContent(type: BlockType): BlockContent {
         isOpen: false,
       };
 
-    case BlockType.PAGE:
+    case BlockTypeEnum.PAGE:
       return {};
 
     default:
@@ -94,7 +101,7 @@ export function validateBlockContent(
   const errors: string[] = [];
 
   switch (type) {
-    case BlockType.MARKDOWN: {
+    case BlockTypeEnum.MARKDOWN: {
       const blockContent = content as MarkdownBlockContent;
 
       if (
@@ -107,7 +114,7 @@ export function validateBlockContent(
       break;
     }
 
-    case BlockType.BUTTON: {
+    case BlockTypeEnum.BUTTON: {
       const blockContent = content as ButtonBlockContent;
 
       if (
@@ -127,7 +134,7 @@ export function validateBlockContent(
       break;
     }
 
-    case BlockType.COPY_TEXT: {
+    case BlockTypeEnum.COPY_TEXT: {
       const blockContent = content as CopyTextBlockContent;
       const text = (blockContent.value ?? blockContent.text ?? '').toString();
 
@@ -137,7 +144,7 @@ export function validateBlockContent(
       break;
     }
 
-    case BlockType.EXPAND: {
+    case BlockTypeEnum.EXPAND: {
       const blockContent = content as ExpandBlockContent;
 
       if (
@@ -162,7 +169,7 @@ export function validateBlockContent(
       break;
     }
 
-    case BlockType.PAGE: {
+    case BlockTypeEnum.PAGE: {
       break;
     }
   }
@@ -244,7 +251,7 @@ export const BLOCK_TEMPLATES = [
     description: 'Email and social links',
     blocks: [
       {
-        type: BlockType.MARKDOWN,
+        type: BlockTypeEnum.MARKDOWN,
         order: 0,
         content: {
           text: '# Get in Touch\n\nFeel free to reach out!',
@@ -252,7 +259,7 @@ export const BLOCK_TEMPLATES = [
         },
       },
       {
-        type: BlockType.BUTTON,
+        type: BlockTypeEnum.BUTTON,
         order: 1,
         content: {
           label: 'Send Email',
@@ -264,7 +271,7 @@ export const BLOCK_TEMPLATES = [
         },
       },
       {
-        type: BlockType.COPY_TEXT,
+        type: BlockTypeEnum.COPY_TEXT,
         order: 2,
         content: {
           text: 'hello@example.com',
@@ -278,7 +285,7 @@ export const BLOCK_TEMPLATES = [
     description: 'App store buttons',
     blocks: [
       {
-        type: BlockType.MARKDOWN,
+        type: BlockTypeEnum.MARKDOWN,
         order: 0,
         content: {
           text: '# Download Our App',
@@ -286,7 +293,7 @@ export const BLOCK_TEMPLATES = [
         },
       },
       {
-        type: BlockType.BUTTON,
+        type: BlockTypeEnum.BUTTON,
         order: 1,
         content: {
           label: 'Download for iOS',
@@ -298,7 +305,7 @@ export const BLOCK_TEMPLATES = [
         },
       },
       {
-        type: BlockType.BUTTON,
+        type: BlockTypeEnum.BUTTON,
         order: 2,
         content: {
           label: 'Download for Android',
@@ -316,7 +323,7 @@ export const BLOCK_TEMPLATES = [
     description: 'Collapsible frequently asked questions',
     blocks: [
       {
-        type: BlockType.MARKDOWN,
+        type: BlockTypeEnum.MARKDOWN,
         order: 0,
         content: {
           text: '# Frequently Asked Questions',
@@ -324,7 +331,7 @@ export const BLOCK_TEMPLATES = [
         },
       },
       {
-        type: BlockType.EXPAND,
+        type: BlockTypeEnum.EXPAND,
         order: 1,
         content: {
           title: 'What is your return policy?',
@@ -334,7 +341,7 @@ export const BLOCK_TEMPLATES = [
         },
       },
       {
-        type: BlockType.EXPAND,
+        type: BlockTypeEnum.EXPAND,
         order: 2,
         content: {
           title: 'How do I track my order?',

@@ -24,7 +24,7 @@ import { Switch } from '@acme/ui';
 import { Card, CardContent, CardHeader, CardTitle } from '@acme/ui';
 import { toast } from '@acme/ui';
 
-import type { Block, BlockType, BlockContent } from '@/types/blocks';
+import type { Block, BlockType, BlockContent, BlockParentType } from '@/types/blocks';
 import {
   createDefaultBlockContent,
   validateBlockContent,
@@ -32,8 +32,8 @@ import {
   getButtonColorClass,
   reorderBlocks,
   getBlockTypeConfig,
+  BlockTypeEnum,
 } from '@/lib/block-types';
-import { BlockType as BlockTypeEnum } from '@/lib/block-types';
 import { BlockListRenderer } from '@/components/block-renderer';
 
 const blockTypeIcons = {
@@ -47,6 +47,7 @@ const blockTypeIcons = {
 interface BlockEditorProps {
   blocks: Block[];
   onBlocksChange: (blocks: Block[]) => void;
+  pageId: string;
   className?: string;
 }
 
@@ -63,7 +64,7 @@ interface BlockFormData {
   content: BlockContent;
 }
 
-export function BlockEditor({ blocks, onBlocksChange, className }: BlockEditorProps) {
+export function BlockEditor({ blocks, onBlocksChange, pageId, className }: BlockEditorProps) {
   const [state, setState] = useState<BlockEditorState>({
     selectedBlockId: null,
     addBlockOpen: false,
@@ -81,10 +82,16 @@ export function BlockEditor({ blocks, onBlocksChange, className }: BlockEditorPr
   const handleAddBlock = (type: BlockType) => {
     const newBlock: Block = {
       id: `temp-${Date.now()}`, // Temporary ID, will be replaced on server
-      pageId: '', // Will be set by parent component
+      parentId: pageId, // Use the current page ID
+      parentType: 'PAGE' as BlockParentType, // Since we're in page editor
+      pageId,
+      profileId: null,
       type,
       order: blocks.length,
       content: createDefaultBlockContent(type),
+      iconName: null,
+      fontColor: null,
+      bgColor: null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -164,7 +171,7 @@ export function BlockEditor({ blocks, onBlocksChange, className }: BlockEditorPr
               {Object.values(BlockTypeEnum).map((type) => {
                 const config = getBlockTypeConfig(type);
                 const IconComponent =
-                  blockTypeIcons[config.icon as keyof typeof blockTypeIcons] ?? FileText;
+                  (blockTypeIcons as Record<string, any>)[config.icon] ?? FileText;
 
                 return (
                   <Button

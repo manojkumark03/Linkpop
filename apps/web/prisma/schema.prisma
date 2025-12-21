@@ -125,6 +125,7 @@ model Profile {
   pages Page[]
   blocks Block[]
   shortLinks ShortLink[]
+  buttonClicks ButtonClick[]
 
   @@index([userId])
 }
@@ -254,8 +255,8 @@ model ButtonClick {
   deviceType DeviceType @default(UNKNOWN) @map("device_type")
   userAgent String?   @map("user_agent")
 
-  button  Block   @relation(fields: [buttonId], references: [id], onDelete: Cascade)
-  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  button  Block    @relation(fields: [buttonId], references: [id], onDelete: Cascade)
+  profile Profile? @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
   @@index([buttonId, clickedAt])
   @@index([profileId, clickedAt])
