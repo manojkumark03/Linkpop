@@ -41,6 +41,28 @@ export interface CopyTextBlockContent {
   value?: string;
 }
 
+export interface SocialBlockContent {
+  platform:
+    | 'twitter'
+    | 'linkedin'
+    | 'instagram'
+    | 'github'
+    | 'youtube'
+    | 'tiktok'
+    | 'facebook'
+    | 'discord'
+    | 'other';
+  username?: string;
+  url?: string;
+  displayName?: string;
+}
+
+export interface LinkBlockContent {
+  title: string;
+  url: string;
+  slug?: string;
+}
+
 export interface ExpandBlockContent {
   title?: string;
   contentType?: 'markdown' | 'iframe' | 'both';
@@ -56,6 +78,8 @@ export type BlockContent =
   | ButtonBlockContent
   | CopyTextBlockContent
   | ExpandBlockContent
+  | SocialBlockContent
+  | LinkBlockContent
   | PageBlockContent;
 
 export interface PageInfo {

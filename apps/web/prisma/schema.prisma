@@ -68,6 +68,8 @@ enum BlockType {
   EXPAND
   COPY_TEXT
   PAGE
+  SOCIAL
+  LINK
 }
 
 enum BlockParentType {
