@@ -13,6 +13,8 @@ import {
   ChevronDown,
   FileText,
   MousePointer2,
+  User,
+  Link2,
 } from 'lucide-react';
 import { cn } from '@acme/ui';
 import { Button } from '@acme/ui';
@@ -41,6 +43,8 @@ const blockTypeIcons = {
   MousePointer2,
   Copy,
   ChevronDown,
+  User,
+  Link2,
 } as const;
 
 // Block Editor Props
@@ -517,6 +521,101 @@ export function BlockEditor({ blocks, onBlocksChange, pageId, className }: Block
                   onCheckedChange={(checked) => handleContentChange({ isOpen: checked })}
                 />
                 <Label htmlFor="expand-open">Open by default</Label>
+              </div>
+            </div>
+          )}
+
+          {selectedBlock.type === 'SOCIAL' && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="social-platform">Platform</Label>
+                <Select
+                  value={(selectedBlock.content as any).platform || 'twitter'}
+                  onValueChange={(value) => handleContentChange({ platform: value as any })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="twitter">Twitter/X</SelectItem>
+                    <SelectItem value="linkedin">LinkedIn</SelectItem>
+                    <SelectItem value="instagram">Instagram</SelectItem>
+                    <SelectItem value="github">GitHub</SelectItem>
+                    <SelectItem value="youtube">YouTube</SelectItem>
+                    <SelectItem value="tiktok">TikTok</SelectItem>
+                    <SelectItem value="facebook">Facebook</SelectItem>
+                    <SelectItem value="discord">Discord</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="social-display-name">Display Name (Optional)</Label>
+                <Input
+                  id="social-display-name"
+                  value={(selectedBlock.content as any).displayName || ''}
+                  onChange={(e) => handleContentChange({ displayName: e.target.value })}
+                  placeholder="Follow me on Twitter"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="social-username">Username (Optional)</Label>
+                <Input
+                  id="social-username"
+                  value={(selectedBlock.content as any).username || ''}
+                  onChange={(e) => handleContentChange({ username: e.target.value })}
+                  placeholder="@username"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="social-url">URL (Optional)</Label>
+                <Input
+                  id="social-url"
+                  value={(selectedBlock.content as any).url || ''}
+                  onChange={(e) => handleContentChange({ url: e.target.value })}
+                  placeholder="https://twitter.com/username"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Provide either a username or URL, or both
+                </p>
+              </div>
+            </div>
+          )}
+
+          {selectedBlock.type === 'LINK' && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="link-title">Title</Label>
+                <Input
+                  id="link-title"
+                  value={(selectedBlock.content as any).title || ''}
+                  onChange={(e) => handleContentChange({ title: e.target.value })}
+                  placeholder="My Website"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="link-url">URL</Label>
+                <Input
+                  id="link-url"
+                  value={(selectedBlock.content as any).url || ''}
+                  onChange={(e) => handleContentChange({ url: e.target.value })}
+                  placeholder="https://example.com"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="link-slug">Custom Slug (Optional)</Label>
+                <Input
+                  id="link-slug"
+                  value={(selectedBlock.content as any).slug || ''}
+                  onChange={(e) => handleContentChange({ slug: e.target.value })}
+                  placeholder="my-custom-link"
+                />
+                <p className="mt-1 text-xs text-gray-500">Custom URL slug for this link</p>
               </div>
             </div>
           )}

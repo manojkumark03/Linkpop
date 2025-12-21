@@ -13,6 +13,7 @@ import { normalizeThemeSettings } from '@/lib/theme-settings';
 import { ProfileEditor } from './_components/profile-editor';
 import { DashboardOnboardingTour } from './_components/onboarding-tour';
 import { ShareProfileCard } from './_components/share-profile-card';
+import { DashboardBuilder } from './_components/dashboard-builder';
 
 async function ensureDefaultProfile(userId: string, fallback: string) {
   const existing = await prisma.profile.findFirst({
@@ -103,6 +104,9 @@ export default async function DashboardPage({
         orderBy: { position: 'asc' },
       },
       pages: {
+        orderBy: { order: 'asc' },
+      },
+      blocks: {
         orderBy: { order: 'asc' },
       },
     },
@@ -330,6 +334,14 @@ export default async function DashboardPage({
               createdAt: s.createdAt.toISOString(),
             }))}
           />
+        </div>
+
+        {/* New Linktree-like Dashboard Builder */}
+        <div data-tour="builder">
+          <h2 className="mb-4 text-2xl font-bold">Profile Builder</h2>
+          <div className="overflow-hidden rounded-lg border">
+            <DashboardBuilder profileId={profile.id} initialBlocks={profile.blocks} />
+          </div>
         </div>
       </div>
     </AnimatedPage>

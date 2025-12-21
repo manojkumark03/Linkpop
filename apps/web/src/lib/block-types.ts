@@ -6,6 +6,8 @@ import {
   CopyTextBlockContent,
   ExpandBlockContent,
   MarkdownBlockContent,
+  SocialBlockContent,
+  LinkBlockContent,
 } from '@/types/blocks';
 
 // Runtime values for BlockType
@@ -15,6 +17,8 @@ export const BlockTypeEnum = {
   EXPAND: 'EXPAND' as BlockType,
   COPY_TEXT: 'COPY_TEXT' as BlockType,
   PAGE: 'PAGE' as BlockType,
+  SOCIAL: 'SOCIAL' as BlockType,
+  LINK: 'LINK' as BlockType,
 } as const;
 
 export const BLOCK_TYPE_CONFIG = {
@@ -41,6 +45,18 @@ export const BLOCK_TYPE_CONFIG = {
     description: 'Text that users can copy to clipboard',
     icon: 'Copy',
     color: 'text-orange-600',
+  },
+  [BlockTypeEnum.SOCIAL]: {
+    name: 'Social',
+    description: 'Social media profile links',
+    icon: 'User',
+    color: 'text-pink-600',
+  },
+  [BlockTypeEnum.LINK]: {
+    name: 'Link',
+    description: 'Simple text link',
+    icon: 'Link2',
+    color: 'text-indigo-600',
   },
   [BlockTypeEnum.PAGE]: {
     name: 'Page',
@@ -84,6 +100,20 @@ export function createDefaultBlockContent(type: BlockType): BlockContent {
         contentType: 'markdown',
         markdown: 'More information goes here...',
         isOpen: false,
+      };
+
+    case BlockTypeEnum.SOCIAL:
+      return {
+        platform: 'twitter',
+        username: '@username',
+        displayName: 'Follow me',
+      };
+
+    case BlockTypeEnum.LINK:
+      return {
+        title: 'My Website',
+        url: 'https://example.com',
+        slug: 'my-website',
       };
 
     case BlockTypeEnum.PAGE:
@@ -165,6 +195,38 @@ export function validateBlockContent(
         (!blockContent.iframeUrl || !isValidUrl(blockContent.iframeUrl))
       ) {
         errors.push('Valid iframe URL is required when content type is iframe');
+      }
+      break;
+    }
+
+    case BlockTypeEnum.SOCIAL: {
+      const blockContent = content as SocialBlockContent;
+
+      if (!blockContent.platform || typeof blockContent.platform !== 'string') {
+        errors.push('Platform is required');
+      }
+      if (!blockContent.url && !blockContent.username) {
+        errors.push('Either URL or username is required');
+      }
+      break;
+    }
+
+    case BlockTypeEnum.LINK: {
+      const blockContent = content as LinkBlockContent;
+
+      if (
+        !blockContent.title ||
+        typeof blockContent.title !== 'string' ||
+        blockContent.title.trim().length === 0
+      ) {
+        errors.push('Title is required');
+      }
+      if (
+        !blockContent.url ||
+        typeof blockContent.url !== 'string' ||
+        !isValidUrl(blockContent.url)
+      ) {
+        errors.push('Valid URL is required');
       }
       break;
     }
