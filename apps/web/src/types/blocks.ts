@@ -1,15 +1,11 @@
-export enum BlockType {
-  BUTTON = 'BUTTON',
-  MARKDOWN = 'MARKDOWN',
-  EXPAND = 'EXPAND',
-  COPY_TEXT = 'COPY_TEXT',
-  PAGE = 'PAGE',
-}
+import type {
+  BlockType as PrismaBlockType,
+  BlockParentType as PrismaBlockParentType,
+} from '@prisma/client';
 
-export enum BlockParentType {
-  PROFILE = 'PROFILE',
-  PAGE = 'PAGE',
-}
+// Re-export Prisma types for consistency
+export type BlockType = PrismaBlockType;
+export type BlockParentType = PrismaBlockParentType;
 
 export interface BaseBlock {
   id: string;
@@ -46,14 +42,14 @@ export interface CopyTextBlockContent {
 }
 
 export interface ExpandBlockContent {
-  title: string;
-  contentType: 'markdown' | 'iframe' | 'both';
+  title?: string;
+  contentType?: 'markdown' | 'iframe' | 'both';
   markdown?: string;
   iframeUrl?: string;
   isOpen?: boolean;
 }
 
-export type PageBlockContent = Record<string, never>;
+export type PageBlockContent = Record<string, never> | undefined;
 
 export type BlockContent =
   | MarkdownBlockContent

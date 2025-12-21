@@ -8,7 +8,7 @@ import { createLinkSchema, reorderLinksSchema, updateLinkSchema } from '@/lib/va
 import { createProfileSchema, updateProfileSchema } from '@/lib/validations/profiles';
 import { slugify } from '@/lib/slugs';
 import { createDefaultBlockContent } from '@/lib/block-types';
-import type { Block, BlockContent } from '@/types/blocks';
+import type { Block, BlockContent, BlockParentType } from '@/types/blocks';
 import { BlockType } from '@/types/blocks';
 
 export async function createProfileAction(input: unknown) {
@@ -786,8 +786,10 @@ export async function updateBlockAction(
   });
 
   revalidatePath('/dashboard');
-  revalidatePath(`/${block.page.profile.slug}`);
-  revalidatePath(`/${block.page.profile.slug}/${block.page.slug}`);
+  if (block.page?.profile?.slug && block.page?.slug) {
+    revalidatePath(`/${block.page.profile.slug}`);
+    revalidatePath(`/${block.page.profile.slug}/${block.page.slug}`);
+  }
 
   return { ok: true as const, block: updatedBlock };
 }
@@ -821,8 +823,10 @@ export async function deleteBlockAction(blockId: string) {
   });
 
   revalidatePath('/dashboard');
-  revalidatePath(`/${block.page.profile.slug}`);
-  revalidatePath(`/${block.page.profile.slug}/${block.page.slug}`);
+  if (block.page?.profile?.slug && block.page?.slug) {
+    revalidatePath(`/${block.page.profile.slug}`);
+    revalidatePath(`/${block.page.profile.slug}/${block.page.slug}`);
+  }
 
   return { ok: true as const };
 }
@@ -856,10 +860,16 @@ export async function getBlocksForPage(pageId: string) {
 
     return {
       id: block.id,
+      parentId: block.parentId,
+      parentType: block.parentType as unknown as BlockParentType,
+      profileId: block.profileId,
+      pageId: block.pageId,
+      iconName: block.iconName,
+      fontColor: block.fontColor,
+      bgColor: block.bgColor,
       type: block.type as unknown as BlockType,
       content,
       order: block.order,
-      pageId: block.pageId,
       createdAt: block.createdAt.toISOString(),
       updatedAt: block.updatedAt.toISOString(),
     };
