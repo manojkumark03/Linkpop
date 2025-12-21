@@ -732,6 +732,8 @@ export async function createBlockAction(input: {
 
   const block = await prisma.block.create({
     data: {
+      parentType: 'PAGE',
+      parentId: input.pageId,
       pageId: input.pageId,
       type: input.type,
       order: input.order,
@@ -758,6 +760,7 @@ export async function updateBlockAction(
   const block = await prisma.block.findFirst({
     where: {
       id: blockId,
+      parentType: 'PAGE',
       page: {
         profile: { userId: user.id, deletedAt: null },
       },
@@ -765,7 +768,7 @@ export async function updateBlockAction(
     select: {
       id: true,
       page: {
-        select: { slug: true },
+        select: { slug: true, profile: { select: { slug: true } } },
       },
     },
   });
@@ -783,7 +786,8 @@ export async function updateBlockAction(
   });
 
   revalidatePath('/dashboard');
-  revalidatePath(`/${block.page.slug}`);
+  revalidatePath(`/${block.page.profile.slug}`);
+  revalidatePath(`/${block.page.profile.slug}/${block.page.slug}`);
 
   return { ok: true as const, block: updatedBlock };
 }
@@ -795,6 +799,7 @@ export async function deleteBlockAction(blockId: string) {
   const block = await prisma.block.findFirst({
     where: {
       id: blockId,
+      parentType: 'PAGE',
       page: {
         profile: { userId: user.id, deletedAt: null },
       },
@@ -802,7 +807,7 @@ export async function deleteBlockAction(blockId: string) {
     select: {
       id: true,
       page: {
-        select: { slug: true },
+        select: { slug: true, profile: { select: { slug: true } } },
       },
     },
   });
@@ -816,7 +821,8 @@ export async function deleteBlockAction(blockId: string) {
   });
 
   revalidatePath('/dashboard');
-  revalidatePath(`/${block.page.slug}`);
+  revalidatePath(`/${block.page.profile.slug}`);
+  revalidatePath(`/${block.page.profile.slug}/${block.page.slug}`);
 
   return { ok: true as const };
 }

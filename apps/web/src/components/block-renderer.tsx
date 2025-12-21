@@ -1,14 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
+import * as LucideIcons from 'lucide-react';
 import {
   ChevronDown,
+  CheckCircle,
   Copy,
   ExternalLink,
-  MousePointer2,
-  CheckCircle,
   FileText,
   Loader2,
+  type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@acme/ui';
 import { Button } from '@acme/ui';
@@ -30,6 +31,29 @@ interface BlockRendererProps {
   className?: string;
 }
 
+const LEGACY_ICON_NAME_MAP: Record<string, string> = {
+  github: 'Github',
+  twitter: 'Twitter',
+  linkedin: 'Linkedin',
+  instagram: 'Instagram',
+  youtube: 'Youtube',
+  website: 'Globe',
+  globe: 'Globe',
+  link: 'Link',
+};
+
+function resolveLucideIcon(iconName?: string | null): LucideIcon | null {
+  if (!iconName) return null;
+
+  const normalized = LEGACY_ICON_NAME_MAP[iconName.toLowerCase()] ?? iconName;
+  const Icon = (LucideIcons as Record<string, unknown>)[normalized];
+  return typeof Icon === 'function' ? (Icon as LucideIcon) : null;
+}
+
+function isHexColor(color: string) {
+  return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(color);
+}
+
 export function BlockRenderer({
   block,
   isPreview = false,
@@ -42,6 +66,8 @@ export function BlockRenderer({
   );
   const [iframeLoading, setIframeLoading] = useState(false);
 
+  const Icon = useMemo(() => resolveLucideIcon(block.iconName), [block.iconName]);
+
   const handleCopyText = async (text: string) => {
     if (!isInteractive || isPreview) return;
 
@@ -53,8 +79,7 @@ export function BlockRenderer({
         description: 'Text copied to clipboard',
       });
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy text: ', err);
+    } catch {
       toast({
         title: 'Copy failed',
         description: 'Unable to copy text to clipboard',
@@ -63,21 +88,7 @@ export function BlockRenderer({
     }
   };
 
-  const handleButtonClick = (url: string) => {
-    if (!isInteractive) return;
-
-    if (isPreview) {
-      // In preview mode, don't actually navigate
-      console.log('Button clicked (preview):', url);
-      return;
-    }
-
-    window.open(url, '_blank', 'noopener,noreferrer');
-  };
-
   const renderMarkdown = (text: string) => {
-    // Simple markdown renderer for basic formatting
-    // In a real app, you'd use a proper markdown library like marked or remark
     const lines = text.split('\n');
     return lines.map((line, index) => {
       if (line.startsWith('# ')) {
@@ -86,40 +97,50 @@ export function BlockRenderer({
             {line.substring(2)}
           </h1>
         );
-      } else if (line.startsWith('## ')) {
+      }
+      if (line.startsWith('## ')) {
         return (
           <h2 key={index} className="mb-3 text-xl font-semibold">
             {line.substring(3)}
           </h2>
         );
-      } else if (line.startsWith('### ')) {
+      }
+      if (line.startsWith('### ')) {
         return (
           <h3 key={index} className="mb-2 text-lg font-medium">
             {line.substring(4)}
           </h3>
         );
-      } else if (line.startsWith('- ')) {
+      }
+      if (line.startsWith('- ')) {
         return (
           <li key={index} className="ml-4">
             {line.substring(2)}
           </li>
         );
-      } else if (line.startsWith('**') && line.endsWith('**')) {
+      }
+      if (line.startsWith('**') && line.endsWith('**')) {
         return (
           <p key={index} className="mb-2 font-semibold">
             {line.slice(2, -2)}
           </p>
         );
-      } else if (line.trim() === '') {
-        return <br key={index} />;
-      } else {
-        return (
-          <p key={index} className="mb-2">
-            {line}
-          </p>
-        );
       }
+      if (line.trim() === '') {
+        return <br key={index} />;
+      }
+
+      return (
+        <p key={index} className="mb-2">
+          {line}
+        </p>
+      );
     });
+  };
+
+  const markdownStyle: CSSProperties = {
+    color: block.fontColor ?? undefined,
+    backgroundColor: block.bgColor ?? undefined,
   };
 
   switch (block.type) {
@@ -127,41 +148,60 @@ export function BlockRenderer({
       const content = block.content as MarkdownBlockContent;
 
       return (
-        <div className={cn('markdown-block block', className)}>
-          <div className="prose prose-sm max-w-none">{renderMarkdown(content.text)}</div>
+        <div className={cn('markdown-block block', className)} style={markdownStyle}>
+          <div
+            className={cn('prose prose-sm max-w-none', block.bgColor ? 'rounded-lg px-4 py-3' : '')}
+          >
+            {renderMarkdown(content.text)}
+          </div>
         </div>
       );
     }
 
     case 'BUTTON': {
       const content = block.content as ButtonBlockContent;
-      const buttonStyle = getButtonColorClass(content.color);
+
+      const isHex = isHexColor(content.color);
+      const classFromPreset = isHex ? '' : getButtonColorClass(content.color);
+
       const sizeClass =
         {
-          small: 'px-3 py-1.5 text-sm',
-          medium: 'px-4 py-2 text-base',
-          large: 'px-6 py-3 text-lg',
-        }[content.size] ?? 'px-4 py-2 text-base';
+          small: 'px-3 py-2 text-sm',
+          medium: 'px-4 py-3 text-base',
+          large: 'px-6 py-4 text-lg',
+        }[content.size] ?? 'px-4 py-3 text-base';
 
-      const styleClass =
-        content.style === 'outline' ? `${buttonStyle} border-2 bg-transparent` : buttonStyle;
+      const style: CSSProperties | undefined = isHex
+        ? { backgroundColor: content.color, color: '#ffffff' }
+        : undefined;
+
+      const href = `/api/buttons/${block.id}/click`;
 
       return (
         <div className={cn('button-block block', className)}>
           <Button
+            asChild
             className={cn(
-              styleClass,
+              'w-full justify-center rounded-lg font-medium transition-all duration-200',
+              'hover:scale-[1.01] active:scale-[0.99]',
               sizeClass,
-              'w-full transition-all duration-200',
-              'hover:scale-105 active:scale-95',
+              classFromPreset,
               isPreview && 'pointer-events-none',
             )}
-            onClick={() => handleButtonClick(content.url)}
-            disabled={isPreview || !isInteractive}
+            style={style}
           >
-            <MousePointer2 className="mr-2 h-4 w-4" />
-            {content.label}
-            <ExternalLink className="ml-2 h-4 w-4" />
+            <a
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => {
+                if (isPreview || !isInteractive) e.preventDefault();
+              }}
+            >
+              {Icon ? <Icon className="h-4 w-4" /> : null}
+              <span className="truncate">{content.label}</span>
+              <ExternalLink className="h-4 w-4 opacity-60" />
+            </a>
           </Button>
         </div>
       );
@@ -169,33 +209,43 @@ export function BlockRenderer({
 
     case 'COPY_TEXT': {
       const content = block.content as CopyTextBlockContent;
+      const value = (content.value ?? content.text ?? '').toString();
 
       return (
         <div className={cn('copy-text-block block', className)}>
-          <div className="relative">
-            <div className="flex items-center gap-2 rounded-lg border bg-gray-50 p-3 dark:bg-gray-800">
-              <div className="min-w-0 flex-1">
-                {content.label && (
-                  <p className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">
-                    {content.label}
-                  </p>
-                )}
-                <p className="break-all font-mono text-sm">{content.text}</p>
+          <div
+            className="flex items-center gap-3 rounded-lg border p-3"
+            style={
+              block.bgColor || block.fontColor
+                ? {
+                    backgroundColor: block.bgColor ?? undefined,
+                    color: block.fontColor ?? undefined,
+                  }
+                : undefined
+            }
+          >
+            {Icon ? (
+              <div className="rounded-lg bg-black/5 p-2 dark:bg-white/10">
+                <Icon className="h-4 w-4" />
               </div>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handleCopyText(content.text)}
-                disabled={isPreview || !isInteractive}
-                className="shrink-0"
-              >
-                {copied ? (
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                ) : (
-                  <Copy className="h-4 w-4" />
-                )}
-              </Button>
+            ) : null}
+
+            <div className="min-w-0 flex-1">
+              {content.label ? (
+                <p className="mb-1 text-xs font-medium opacity-70">{content.label}</p>
+              ) : null}
+              <p className="break-all font-mono text-sm">{value}</p>
             </div>
+
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => handleCopyText(value)}
+              disabled={isPreview || !isInteractive}
+              className="shrink-0"
+            >
+              {copied ? <CheckCircle className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+            </Button>
           </div>
         </div>
       );
@@ -205,35 +255,45 @@ export function BlockRenderer({
       const content = block.content as ExpandBlockContent;
       const isOpen = expanded;
 
+      const containerStyle: CSSProperties | undefined =
+        block.bgColor || block.fontColor
+          ? { backgroundColor: block.bgColor ?? undefined, color: block.fontColor ?? undefined }
+          : undefined;
+
       return (
         <div className={cn('expand-block block', className)}>
           <details
-            className="group"
+            className="group rounded-lg border"
+            style={containerStyle}
             open={isOpen}
             onToggle={(e) => setExpanded(e.currentTarget.open)}
           >
-            <summary className="flex cursor-pointer list-none items-center justify-between rounded-lg border bg-gray-50 p-3 transition-colors hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700">
+            <summary
+              className={cn(
+                'flex cursor-pointer list-none items-center justify-between rounded-lg p-3 transition-colors',
+                !block.bgColor && 'bg-muted/40 hover:bg-muted/60',
+              )}
+            >
               <h3 className="text-sm font-medium">{content.title}</h3>
               <ChevronDown
                 className={cn('h-4 w-4 transition-transform duration-200', isOpen && 'rotate-180')}
               />
             </summary>
 
-            <div className="mt-2 rounded-lg border bg-white p-4 dark:bg-gray-900">
-              {content.contentType === 'markdown' && (
-                <div className="prose prose-sm max-w-none">
-                  {renderMarkdown(content.markdown || '')}
-                </div>
-              )}
+            <div className={cn('px-4 pb-4', !block.bgColor && 'bg-background')}>
+              {content.contentType === 'markdown' ? (
+                <div className="prose prose-sm max-w-none pt-3">{renderMarkdown(content.markdown || '')}</div>
+              ) : null}
 
-              {content.contentType === 'iframe' && (
-                <div className="relative">
-                  {iframeLoading && (
+              {content.contentType === 'iframe' ? (
+                <div className="relative pt-3">
+                  {iframeLoading ? (
                     <div className="flex items-center justify-center p-8">
                       <Loader2 className="h-6 w-6 animate-spin" />
                       <span className="ml-2">Loading...</span>
                     </div>
-                  )}
+                  ) : null}
+
                   <iframe
                     src={content.iframeUrl ?? ''}
                     className="h-64 w-full rounded"
@@ -243,23 +303,23 @@ export function BlockRenderer({
                     title={content.title}
                   />
                 </div>
-              )}
+              ) : null}
 
-              {content.contentType === 'both' && (
-                <div className="space-y-4">
-                  {content.markdown && (
-                    <div className="prose prose-sm max-w-none">
-                      {renderMarkdown(content.markdown)}
-                    </div>
-                  )}
-                  {content.iframeUrl && (
+              {content.contentType === 'both' ? (
+                <div className="space-y-4 pt-3">
+                  {content.markdown ? (
+                    <div className="prose prose-sm max-w-none">{renderMarkdown(content.markdown)}</div>
+                  ) : null}
+
+                  {content.iframeUrl ? (
                     <div className="relative">
-                      {iframeLoading && (
+                      {iframeLoading ? (
                         <div className="flex items-center justify-center p-8">
                           <Loader2 className="h-6 w-6 animate-spin" />
                           <span className="ml-2">Loading...</span>
                         </div>
-                      )}
+                      ) : null}
+
                       <iframe
                         src={content.iframeUrl}
                         className="h-64 w-full rounded"
@@ -269,9 +329,9 @@ export function BlockRenderer({
                         title={content.title}
                       />
                     </div>
-                  )}
+                  ) : null}
                 </div>
-              )}
+              ) : null}
             </div>
           </details>
         </div>
@@ -292,7 +352,6 @@ export function BlockRenderer({
   }
 }
 
-// Multi-block renderer for rendering multiple blocks in sequence
 interface BlockListRendererProps {
   blocks: Block[];
   className?: string;

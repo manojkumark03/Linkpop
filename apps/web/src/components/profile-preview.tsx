@@ -2,23 +2,27 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import type { CSSProperties } from 'react';
 import type { Prisma } from '@prisma/client';
+import * as LucideIcons from 'lucide-react';
 import {
-  Github,
+  ChevronRight,
   Globe,
+  type LucideIcon,
+  Github,
   Instagram,
   Linkedin,
   Twitter,
   Youtube,
   Copy,
-  ChevronRight,
-  type LucideIcon,
 } from 'lucide-react';
 
 import { cn, toast } from '@acme/ui';
 
 import type { ThemeSettings } from '@/lib/theme-settings';
 import { isLinkVisible } from '@/lib/link-visibility';
+import { BlockListRenderer, BlockRenderer } from '@/components/block-renderer';
+import type { Block, PageInfo } from '@/types/blocks';
 
 export type PreviewProfile = {
   slug: string;
@@ -45,7 +49,15 @@ export type PreviewLink = {
   metadata: Prisma.JsonValue;
 };
 
-const iconMap: Record<string, LucideIcon> = {
+export type PreviewPageWithBlocks = PageInfo & {
+  blocks?: Block[];
+};
+
+export type PreviewElement = Block & {
+  page?: PreviewPageWithBlocks | null;
+};
+
+const legacyIconMap: Record<string, LucideIcon> = {
   github: Github,
   twitter: Twitter,
   linkedin: Linkedin,
@@ -54,6 +66,24 @@ const iconMap: Record<string, LucideIcon> = {
   website: Globe,
   globe: Globe,
 };
+
+const LEGACY_ICON_NAME_MAP: Record<string, string> = {
+  github: 'Github',
+  twitter: 'Twitter',
+  linkedin: 'Linkedin',
+  instagram: 'Instagram',
+  youtube: 'Youtube',
+  website: 'Globe',
+  globe: 'Globe',
+  link: 'Link',
+};
+
+function resolveLucideIcon(iconName?: string | null): LucideIcon | null {
+  if (!iconName) return null;
+  const normalized = LEGACY_ICON_NAME_MAP[iconName.toLowerCase()] ?? iconName;
+  const Icon = (LucideIcons as Record<string, unknown>)[normalized];
+  return typeof Icon === 'function' ? (Icon as LucideIcon) : null;
+}
 
 function getLinkMetadata(link: PreviewLink): Record<string, any> {
   if (!link.metadata || typeof link.metadata !== 'object') return {};
@@ -80,17 +110,98 @@ export function ProfilePreview({
   profile,
   links,
   pages = [],
+  elements,
   className,
   showQr,
 }: {
   profile: PreviewProfile;
   links: PreviewLink[];
   pages?: PreviewPage[];
+  elements?: PreviewElement[];
   className?: string;
   showQr?: boolean;
 }) {
   const theme = profile.themeSettings;
 
+  // New element-based rendering
+  if (elements && elements.length > 0) {
+    const sorted = [...elements].sort((a, b) => a.order - b.order);
+
+    return (
+      <div
+        className={cn('flex min-h-screen items-center justify-center p-6', className)}
+        style={
+          {
+            background: theme.backgroundColor,
+            color: theme.textColor,
+            fontFamily: getFontVariable(theme.fontFamily),
+            colorScheme: 'light',
+          } as CSSProperties
+        }
+      >
+        {theme.customCss ? <style dangerouslySetInnerHTML={{ __html: theme.customCss }} /> : null}
+
+        <div className="w-full max-w-md">
+          <div className="flex flex-col items-center text-center">
+            {profile.image ? (
+              <div className="relative h-24 w-24 overflow-hidden rounded-full border border-white/15">
+                <Image src={profile.image} alt="Profile avatar" fill className="object-cover" />
+              </div>
+            ) : (
+              <div className="flex h-24 w-24 items-center justify-center rounded-full border border-white/15 bg-white/5 text-2xl font-semibold">
+                {(profile.displayName || profile.slug).slice(0, 1).toUpperCase()}
+              </div>
+            )}
+
+            <h1 className="mt-4 text-2xl font-bold">{profile.displayName || profile.slug}</h1>
+            {profile.bio ? <p className="mt-2 text-sm opacity-90">{profile.bio}</p> : null}
+          </div>
+
+          <div className="mt-8 space-y-4">
+            {sorted.map((el) => {
+              if (el.type === 'PAGE') {
+                const page = el.page;
+                if (!page || !page.isPublished) return null;
+
+                const PageIcon = resolveLucideIcon(page.icon);
+
+                return (
+                  <div
+                    key={el.id}
+                    className="rounded-xl border border-white/15 bg-white/5 p-4"
+                    style={{ borderRadius: theme.buttonRadius }}
+                  >
+                    <div className="mb-3 flex items-center justify-between">
+                      <div className="flex items-center gap-2 font-semibold">
+                        {PageIcon ? <PageIcon className="h-4 w-4" /> : null}
+                        <span className="truncate">{page.title}</span>
+                      </div>
+                      <Link
+                        href={`/${profile.slug}/${page.slug}`}
+                        className="text-sm opacity-80 transition-opacity hover:opacity-100"
+                      >
+                        Open <ChevronRight className="inline h-4 w-4" />
+                      </Link>
+                    </div>
+
+                    <BlockListRenderer blocks={page.blocks ?? []} isPreview={false} isInteractive={true} />
+                  </div>
+                );
+              }
+
+              return <BlockRenderer key={el.id} block={el} isPreview={false} isInteractive={true} />;
+            })}
+          </div>
+
+          {showQr ? (
+            <div className="mt-10 text-center text-xs opacity-60">QR code coming soon</div>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
+
+  // Legacy rendering (links + pages)
   const visibleLinks = links.filter((l) =>
     isLinkVisible({
       status: l.status,
@@ -118,7 +229,7 @@ export function ProfilePreview({
           color: theme.textColor,
           fontFamily: getFontVariable(theme.fontFamily),
           colorScheme: 'light',
-        } as React.CSSProperties
+          } as CSSProperties
       }
     >
       {theme.customCss ? <style dangerouslySetInnerHTML={{ __html: theme.customCss }} /> : null}
@@ -142,7 +253,7 @@ export function ProfilePreview({
             <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
               {socialLinks.map((l) => {
                 const md = getLinkMetadata(l);
-                const Icon = md.icon ? iconMap[String(md.icon).toLowerCase()] : null;
+                const Icon = md.icon ? legacyIconMap[String(md.icon).toLowerCase()] : null;
                 return (
                   <a
                     key={l.id}
@@ -162,7 +273,7 @@ export function ProfilePreview({
           {buttonLinks.map((l) => {
             const md = getLinkMetadata(l);
             const iconKey = md.icon ? String(md.icon).toLowerCase() : '';
-            const Icon = iconKey ? (iconMap[iconKey] ?? Globe) : null;
+            const Icon = iconKey ? (legacyIconMap[iconKey] ?? Globe) : null;
 
             if (l.linkType === 'COPY_FIELD') {
               return (
@@ -234,8 +345,7 @@ export function ProfilePreview({
           })}
         </div>
 
-        {/* Pages Section */}
-        {pages.length > 0 && (
+        {pages.length > 0 ? (
           <div className="mt-8">
             <h2 className="mb-4 text-lg font-semibold">Pages</h2>
             <div className="space-y-3">
@@ -257,20 +367,10 @@ export function ProfilePreview({
               ))}
             </div>
           </div>
-        )}
+        ) : null}
 
         {showQr ? (
-          <div className="mt-8 flex flex-col items-center gap-2">
-            <div className="text-xs opacity-80">Scan to share</div>
-            <Image
-              src={`/api/qr?slug=${encodeURIComponent(profile.slug)}`}
-              alt="QR code"
-              width={160}
-              height={160}
-              className="h-40 w-40 rounded bg-white p-2"
-              unoptimized
-            />
-          </div>
+          <div className="mt-10 text-center text-xs opacity-60">QR code coming soon</div>
         ) : null}
       </div>
     </div>

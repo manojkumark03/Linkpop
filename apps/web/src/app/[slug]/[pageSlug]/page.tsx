@@ -6,8 +6,16 @@ import { prisma } from '@/lib/prisma';
 import { normalizeThemeSettings } from '@/lib/theme-settings';
 import { PageViewTracker } from '@/components/page-view-tracker';
 import { BlockRenderer } from '@/components/block-renderer';
+import * as LucideIcons from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
+
+function resolveLucideIcon(name?: string | null): LucideIcon | null {
+  if (!name) return null;
+  const Icon = (LucideIcons as Record<string, unknown>)[name];
+  return typeof Icon === 'function' ? (Icon as LucideIcon) : null;
+}
 
 export async function generateMetadata({
   params,
@@ -71,6 +79,7 @@ export default async function PagePage({ params }: { params: { slug: string; pag
         },
       },
       blocks: {
+        where: { parentType: 'PAGE' },
         orderBy: { order: 'asc' },
       },
     },
@@ -81,6 +90,7 @@ export default async function PagePage({ params }: { params: { slug: string; pag
   }
 
   const theme = normalizeThemeSettings(page.profile.themeSettings);
+  const PageIcon = resolveLucideIcon(page.icon);
 
   return (
     <div
@@ -108,7 +118,7 @@ export default async function PagePage({ params }: { params: { slug: string; pag
       <main className="container mx-auto max-w-4xl px-4 py-12">
         <div className="mb-8">
           <h1 className="mb-2 text-4xl font-bold" style={{ color: theme.textColor }}>
-            {page.icon && <span className="mr-3">{page.icon}</span>}
+            {PageIcon ? <PageIcon className="mr-3 inline h-8 w-8" /> : null}
             {page.title}
           </h1>
         </div>

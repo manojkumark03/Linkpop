@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation';
 import { ProfilePreview } from '@/components/profile-preview';
 import { prisma } from '@/lib/prisma';
 import { normalizeThemeSettings } from '@/lib/theme-settings';
+import { createDefaultBlockContent } from '@/lib/block-types';
+import type { BlockContent, BlockType, BlockParentType } from '@/types/blocks';
 
 export const dynamic = 'force-dynamic';
 
@@ -68,6 +70,81 @@ export default async function PublicProfilePage({ params }: { params: { slug: st
   const theme = normalizeThemeSettings(profile.themeSettings);
   const canUseCustomScripts = profile.user.subscriptionTier === 'PRO';
 
+  const rawElements = await prisma.block.findMany({
+    where: {
+      parentType: 'PROFILE',
+      parentId: profile.id,
+    },
+    orderBy: { order: 'asc' },
+    include: {
+      page: {
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          icon: true,
+          isPublished: true,
+          blocks: {
+            where: { parentType: 'PAGE' },
+            orderBy: { order: 'asc' },
+          },
+        },
+      },
+    },
+  });
+
+  const mapBlock = (b: (typeof rawElements)[number]) => {
+    const content =
+      b.content && typeof b.content === 'object'
+        ? (b.content as unknown as BlockContent)
+        : createDefaultBlockContent(b.type as unknown as BlockType);
+
+    return {
+      id: b.id,
+      type: b.type as unknown as BlockType,
+      order: b.order,
+      parentId: b.parentId,
+      parentType: b.parentType as unknown as BlockParentType,
+      profileId: b.profileId,
+      pageId: b.pageId,
+      iconName: b.iconName,
+      fontColor: b.fontColor,
+      bgColor: b.bgColor,
+      content,
+      createdAt: b.createdAt.toISOString(),
+      updatedAt: b.updatedAt.toISOString(),
+      page: b.page
+        ? {
+            id: b.page.id,
+            title: b.page.title,
+            slug: b.page.slug,
+            icon: b.page.icon,
+            isPublished: b.page.isPublished,
+            blocks: b.page.blocks.map((child) => ({
+              id: child.id,
+              type: child.type as unknown as BlockType,
+              order: child.order,
+              parentId: child.parentId,
+              parentType: child.parentType as unknown as BlockParentType,
+              profileId: child.profileId,
+              pageId: child.pageId,
+              iconName: child.iconName,
+              fontColor: child.fontColor,
+              bgColor: child.bgColor,
+              content:
+                child.content && typeof child.content === 'object'
+                  ? (child.content as unknown as BlockContent)
+                  : createDefaultBlockContent(child.type as unknown as BlockType),
+              createdAt: child.createdAt.toISOString(),
+              updatedAt: child.updatedAt.toISOString(),
+            })),
+          }
+        : null,
+    };
+  };
+
+  const elements = rawElements.map(mapBlock);
+
   return (
     <>
       <ProfilePreview
@@ -78,6 +155,7 @@ export default async function PublicProfilePage({ params }: { params: { slug: st
           image: profile.image,
           themeSettings: theme,
         }}
+        elements={elements}
         links={profile.links
           .filter((l) => l.linkType !== 'BLOCK')
           .map((l) => ({

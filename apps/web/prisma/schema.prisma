@@ -63,13 +63,17 @@ enum LinkType {
 }
 
 enum BlockType {
-  MARKDOWN
   BUTTON
-  COPY_TEXT
+  MARKDOWN
   EXPAND
+  COPY_TEXT
+  PAGE
 }
 
-
+enum BlockParentType {
+  PROFILE
+  PAGE
+}
 
 model User {
   id            String    @id @default(cuid())
@@ -119,6 +123,7 @@ model Profile {
   user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   links Link[]
   pages Page[]
+  blocks Block[]
   shortLinks ShortLink[]
 
   @@index([userId])
@@ -191,18 +196,34 @@ model Link {
 }
 
 model Block {
-  id        String   @id @default(cuid())
-  pageId    String
-  type      BlockType
-  order     Int
-  
-  content   Json
-  
+  id         String          @id @default(cuid())
+  parentId   String
+  parentType BlockParentType
+
+  type       BlockType
+  order      Int             @default(0)
+
+  // Display customization
+  iconName  String? @map("icon_name")
+  fontColor String? @map("font_color")
+  bgColor   String? @map("bg_color")
+
+  // Optional relations (enforced in app logic)
+  profileId String?
+  pageId    String?
+
+  content Json @default(dbgenerated("'{}'::jsonb"))
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  profile Profile? @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  page    Page?    @relation(fields: [pageId], references: [id], onDelete: Cascade)
 
+  buttonClicks ButtonClick[]
+
+  @@index([parentType, parentId, order])
+  @@index([profileId, order])
   @@index([pageId, order])
 }
 
@@ -219,6 +240,25 @@ model Analytics {
   link Link @relation(fields: [linkId], references: [id], onDelete: Cascade)
 
   @@index([linkId, clickedAt])
+  @@index([country])
+  @@index([referrer])
+}
+
+model ButtonClick {
+  id        String     @id @default(cuid())
+  buttonId  String     @map("button_id")
+  profileId String     @map("profile_id")
+  clickedAt DateTime   @default(now()) @map("clicked_at")
+  country   String?    @db.VarChar(2)
+  referrer  String?
+  deviceType DeviceType @default(UNKNOWN) @map("device_type")
+  userAgent String?   @map("user_agent")
+
+  button  Block   @relation(fields: [buttonId], references: [id], onDelete: Cascade)
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([buttonId, clickedAt])
+  @@index([profileId, clickedAt])
   @@index([country])
   @@index([referrer])
 }

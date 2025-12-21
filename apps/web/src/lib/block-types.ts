@@ -11,17 +11,23 @@ import {
 export { BlockType };
 
 export const BLOCK_TYPE_CONFIG = {
+  [BlockType.BUTTON]: {
+    name: 'Button',
+    description: 'Customizable button link',
+    icon: 'MousePointer2',
+    color: 'text-green-600',
+  },
   [BlockType.MARKDOWN]: {
     name: 'Markdown',
     description: 'Rich text content with formatting',
     icon: 'FileText',
     color: 'text-blue-600',
   },
-  [BlockType.BUTTON]: {
-    name: 'Button',
-    description: 'Customizable button link',
-    icon: 'MousePointer2',
-    color: 'text-green-600',
+  [BlockType.EXPAND]: {
+    name: 'Expand',
+    description: 'Collapsible section with content',
+    icon: 'ChevronDown',
+    color: 'text-purple-600',
   },
   [BlockType.COPY_TEXT]: {
     name: 'Copy Text',
@@ -29,11 +35,11 @@ export const BLOCK_TYPE_CONFIG = {
     icon: 'Copy',
     color: 'text-orange-600',
   },
-  [BlockType.EXPAND]: {
-    name: 'Expand',
-    description: 'Collapsible section with content',
-    icon: 'ChevronDown',
-    color: 'text-purple-600',
+  [BlockType.PAGE]: {
+    name: 'Page',
+    description: 'A container with nested elements',
+    icon: 'Layers',
+    color: 'text-slate-600',
   },
 } as const;
 
@@ -72,6 +78,9 @@ export function createDefaultBlockContent(type: BlockType): BlockContent {
         markdown: 'More information goes here...',
         isOpen: false,
       };
+
+    case BlockType.PAGE:
+      return {};
 
     default:
       throw new Error(`Unknown block type: ${type}`);
@@ -120,12 +129,9 @@ export function validateBlockContent(
 
     case BlockType.COPY_TEXT: {
       const blockContent = content as CopyTextBlockContent;
+      const text = (blockContent.value ?? blockContent.text ?? '').toString();
 
-      if (
-        !blockContent.text ||
-        typeof blockContent.text !== 'string' ||
-        blockContent.text.trim().length === 0
-      ) {
+      if (text.trim().length === 0) {
         errors.push('Text to copy is required');
       }
       break;
@@ -153,6 +159,10 @@ export function validateBlockContent(
       ) {
         errors.push('Valid iframe URL is required when content type is iframe');
       }
+      break;
+    }
+
+    case BlockType.PAGE: {
       break;
     }
   }
@@ -279,7 +289,7 @@ export const BLOCK_TEMPLATES = [
         type: BlockType.BUTTON,
         order: 1,
         content: {
-          label: '📱 Download for iOS',
+          label: 'Download for iOS',
           url: 'https://apps.apple.com',
           color: '#000000',
           size: 'large',
@@ -291,7 +301,7 @@ export const BLOCK_TEMPLATES = [
         type: BlockType.BUTTON,
         order: 2,
         content: {
-          label: '🤖 Download for Android',
+          label: 'Download for Android',
           url: 'https://play.google.com',
           color: '#34a853',
           size: 'large',

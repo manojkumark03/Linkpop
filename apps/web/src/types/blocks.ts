@@ -1,14 +1,27 @@
 export enum BlockType {
-  MARKDOWN = 'MARKDOWN',
   BUTTON = 'BUTTON',
-  COPY_TEXT = 'COPY_TEXT',
+  MARKDOWN = 'MARKDOWN',
   EXPAND = 'EXPAND',
+  COPY_TEXT = 'COPY_TEXT',
+  PAGE = 'PAGE',
+}
+
+export enum BlockParentType {
+  PROFILE = 'PROFILE',
+  PAGE = 'PAGE',
 }
 
 export interface BaseBlock {
   id: string;
   type: BlockType;
   order: number;
+  parentId: string;
+  parentType: BlockParentType;
+  profileId?: string | null;
+  pageId?: string | null;
+  iconName?: string | null;
+  fontColor?: string | null;
+  bgColor?: string | null;
 }
 
 export interface MarkdownBlockContent {
@@ -26,8 +39,10 @@ export interface ButtonBlockContent {
 }
 
 export interface CopyTextBlockContent {
-  text: string;
   label?: string;
+  /** @deprecated use value */
+  text?: string;
+  value?: string;
 }
 
 export interface ExpandBlockContent {
@@ -38,29 +53,49 @@ export interface ExpandBlockContent {
   isOpen?: boolean;
 }
 
+export type PageBlockContent = Record<string, never>;
+
 export type BlockContent =
   | MarkdownBlockContent
   | ButtonBlockContent
   | CopyTextBlockContent
-  | ExpandBlockContent;
+  | ExpandBlockContent
+  | PageBlockContent;
+
+export interface PageInfo {
+  id: string;
+  title: string;
+  slug: string;
+  icon?: string | null;
+  isPublished: boolean;
+}
 
 export interface Block extends BaseBlock {
   content: BlockContent;
-  pageId: string;
   createdAt: string;
   updatedAt: string;
+  page?: PageInfo | null;
 }
 
 export interface CreateBlockData {
-  pageId: string;
+  parentType: BlockParentType;
+  parentId: string;
   type: BlockType;
   order: number;
   content: BlockContent;
+  profileId?: string | null;
+  pageId?: string | null;
+  iconName?: string | null;
+  fontColor?: string | null;
+  bgColor?: string | null;
 }
 
 export interface UpdateBlockData {
   order?: number;
   content?: BlockContent;
+  iconName?: string | null;
+  fontColor?: string | null;
+  bgColor?: string | null;
 }
 
 export interface BlockEditorState {
@@ -72,5 +107,5 @@ export interface BlockEditorState {
 export interface BlockTemplate {
   name: string;
   description: string;
-  blocks: Omit<Block, 'id' | 'linkId' | 'createdAt' | 'updatedAt'>[];
+  blocks: Omit<Block, 'id' | 'createdAt' | 'updatedAt'>[];
 }
