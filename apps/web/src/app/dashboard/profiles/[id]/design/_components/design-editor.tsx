@@ -19,20 +19,35 @@ import {
 } from '@acme/ui';
 import { useRouter } from 'next/navigation';
 
-import {
-  ProfilePreview,
-  type PreviewLink,
-  type PreviewPage,
-  type PreviewProfile,
-} from '@/components/profile-preview';
+import { ProfilePreview } from '@/components/profile-preview';
 import { ThemeSettings } from '@/lib/theme-settings';
 
-type DesignEditorProfile = PreviewProfile & { id: string };
+type DesignEditorProfile = {
+  id: string;
+  slug: string;
+  displayName: string | null;
+  bio: string | null;
+  image: string | null;
+  themeSettings: ThemeSettings;
+};
 
 interface DesignEditorProps {
   profile: DesignEditorProfile;
-  links: PreviewLink[];
-  pages: PreviewPage[];
+  links: {
+    id: string;
+    title: string;
+    url: string;
+    linkType: 'URL' | 'COPY_FIELD';
+    status: string;
+    deletedAt: Date | null;
+    metadata: any;
+  }[];
+  pages: {
+    id: string;
+    title: string;
+    slug: string;
+    icon: string | null;
+  }[];
 }
 
 const themePresets = [
@@ -348,6 +363,7 @@ export function DesignEditor({ profile, links, pages }: DesignEditorProps) {
                   image: avatarUrl || null,
                   themeSettings: settings,
                 }}
+                elements={[]} // Empty elements array for design preview
                 links={links}
                 pages={pages}
                 showQr

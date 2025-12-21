@@ -1,0 +1,86 @@
+
+> linkforest@ build /home/engine/project
+> pnpm -r --if-present build
+
+Scope: 2 of 3 workspace projects
+apps/web build$ next build
+apps/web build:   ▲ Next.js 14.2.20
+apps/web build:    Creating an optimized production build ...
+apps/web build:  ✓ Compiled successfully
+apps/web build:    Linting and checking validity of types ...
+apps/web build: ./src/components/profile-preview.tsx
+apps/web build: 69:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+apps/web build: info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules
+apps/web build:    Collecting page data ...
+apps/web build:    Generating static pages (0/39) ...
+apps/web build:    Generating static pages (9/39) 
+apps/web build:  ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+apps/web build:  ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+apps/web build:    Generating static pages (19/39) 
+apps/web build:    Generating static pages (29/39) 
+apps/web build:  ✓ Generating static pages (39/39)
+apps/web build:    Finalizing page optimization ...
+apps/web build:    Collecting build traces ...
+apps/web build: Route (app)                                   Size     First Load JS
+apps/web build: ┌ ○ /                                         4.57 kB         268 kB
+apps/web build: ├ ○ /_not-found                               879 B          88.3 kB
+apps/web build: ├ ƒ /[slug]                                   177 B          90.3 kB
+apps/web build: ├ ƒ /[slug]/[pageSlug]                        1.05 kB         269 kB
+apps/web build: ├ ○ /about                                    153 B          87.5 kB
+apps/web build: ├ ƒ /admin                                    274 B           142 kB
+apps/web build: ├ ƒ /admin/analytics                          274 B           142 kB
+apps/web build: ├ ƒ /admin/billing                            274 B           142 kB
+apps/web build: ├ ƒ /admin/users                              1.53 kB         143 kB
+apps/web build: ├ ƒ /api/admin/users/role                     0 B                0 B
+apps/web build: ├ ƒ /api/admin/users/status                   0 B                0 B
+apps/web build: ├ ƒ /api/analytics                            0 B                0 B
+apps/web build: ├ ƒ /api/analytics/aggregate                  0 B                0 B
+apps/web build: ├ ƒ /api/auth/[...nextauth]                   0 B                0 B
+apps/web build: ├ ƒ /api/auth/password-reset/request          0 B                0 B
+apps/web build: ├ ƒ /api/auth/password-reset/reset            0 B                0 B
+apps/web build: ├ ƒ /api/auth/register                        0 B                0 B
+apps/web build: ├ ƒ /api/buttons/[buttonId]/click             0 B                0 B
+apps/web build: ├ ƒ /api/contact                              0 B                0 B
+apps/web build: ├ ƒ /api/links                                0 B                0 B
+apps/web build: ├ ƒ /api/links/[linkId]                       0 B                0 B
+apps/web build: ├ ƒ /api/links/[linkId]/click                 0 B                0 B
+apps/web build: ├ ƒ /api/links/reorder                        0 B                0 B
+apps/web build: ├ ƒ /api/pages/[pageId]/view                  0 B                0 B
+apps/web build: ├ ƒ /api/preview/[userId]                     0 B                0 B
+apps/web build: ├ ƒ /api/profiles                             0 B                0 B
+apps/web build: ├ ƒ /api/profiles/[profileId]                 0 B                0 B
+apps/web build: ├ ƒ /api/profiles/[profileId]/design          0 B                0 B
+apps/web build: ├ ƒ /api/profiles/[profileId]/duplicate       0 B                0 B
+apps/web build: ├ ƒ /api/profiles/[profileId]/export          0 B                0 B
+apps/web build: ├ ƒ /api/profiles/[profileId]/pages           0 B                0 B
+apps/web build: ├ ƒ /api/profiles/[profileId]/pages/[pageId]  0 B                0 B
+apps/web build: ├ ƒ /api/qr                                   0 B                0 B
+apps/web build: ├ ƒ /api/s/[slug]                             0 B                0 B
+apps/web build: ├ ƒ /api/subscribe                            0 B                0 B
+apps/web build: ├ ƒ /auth/error                               274 B           142 kB
+apps/web build: ├ ○ /auth/forgot-password                     2.34 kB        97.6 kB
+apps/web build: ├ ○ /auth/login                               2.51 kB         108 kB
+apps/web build: ├ ○ /auth/register                            2.5 kB          108 kB
+apps/web build: ├ ƒ /auth/reset-password                      2.42 kB        97.7 kB
+apps/web build: ├ ○ /auth/suspended                           274 B           142 kB
+apps/web build: ├ ○ /contact                                  30.1 kB         128 kB
+apps/web build: ├ ƒ /dashboard                                45 kB           395 kB
+apps/web build: ├ ƒ /dashboard/analytics                      114 kB          299 kB
+apps/web build: ├ ƒ /dashboard/analytics/export               0 B                0 B
+apps/web build: ├ ƒ /dashboard/billing                        3.59 kB         152 kB
+apps/web build: ├ ƒ /dashboard/profiles/[id]/design           3.26 kB         154 kB
+apps/web build: ├ ○ /faq                                      274 B           142 kB
+apps/web build: ├ ○ /how-it-works                             2.29 kB        89.7 kB
+apps/web build: ├ ○ /pricing                                  3.45 kB         106 kB
+apps/web build: ├ ○ /privacy                                  153 B          87.5 kB
+apps/web build: ├ ○ /resources                                284 B           149 kB
+apps/web build: ├ ƒ /s/[slug]                                 0 B                0 B
+apps/web build: └ ○ /terms                                    153 B          87.5 kB
+apps/web build: + First Load JS shared by all                 87.4 kB
+apps/web build:   ├ chunks/3172-3e49f8d4cb3a2321.js           31.8 kB
+apps/web build:   ├ chunks/761fbc40-a6eef2804dc0aa87.js       53.6 kB
+apps/web build:   └ other shared chunks (total)               1.98 kB
+apps/web build: ƒ Middleware                                  47.7 kB
+apps/web build: ○  (Static)   prerendered as static content
+apps/web build: ƒ  (Dynamic)  server-rendered on demand
+apps/web build: Done

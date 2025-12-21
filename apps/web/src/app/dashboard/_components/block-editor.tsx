@@ -295,7 +295,7 @@ export function BlockEditor({ blocks, onBlocksChange, pageId, className }: Block
 
     const handleContentChange = (updates: Partial<BlockContent>) => {
       handleUpdateBlock(selectedBlock.id, {
-        content: { ...selectedBlock.content, ...updates },
+        content: { ...selectedBlock.content, ...updates } as BlockContent,
       });
     };
 

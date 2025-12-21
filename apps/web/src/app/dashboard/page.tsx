@@ -340,7 +340,15 @@ export default async function DashboardPage({
         <div data-tour="builder">
           <h2 className="mb-4 text-2xl font-bold">Profile Builder</h2>
           <div className="overflow-hidden rounded-lg border">
-            <DashboardBuilder profileId={profile.id} initialBlocks={profile.blocks} />
+            <DashboardBuilder
+              profileId={profile.id}
+              initialBlocks={profile.blocks.map((block) => ({
+                ...block,
+                content: block.content as any,
+                createdAt: block.createdAt.toISOString(),
+                updatedAt: block.updatedAt.toISOString(),
+              }))}
+            />
           </div>
         </div>
       </div>

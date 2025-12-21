@@ -43,12 +43,11 @@ export async function createProfileElement(
         pageId: null,
         type,
         order: nextOrder,
-        content,
+        content: content as any,
       },
     });
 
     revalidatePath('/dashboard');
-    revalidatePath(`/${profile.slug}`);
 
     return { ok: true, block };
   } catch (error) {
@@ -85,16 +84,20 @@ export async function updateProfileElement(
       return { ok: false, error: 'Element not found or access denied' };
     }
 
+    const updateData: any = { ...updates };
+    if (updateData.content) {
+      updateData.content = updateData.content as any;
+    }
+
     const updatedBlock = await prisma.block.update({
       where: { id: elementId },
       data: {
-        ...updates,
+        ...updateData,
         updatedAt: new Date(),
       },
     });
 
     revalidatePath('/dashboard');
-    revalidatePath(`/${block.profile.slug}`);
 
     return { ok: true, block: updatedBlock };
   } catch (error) {
@@ -127,7 +130,6 @@ export async function deleteProfileElement(elementId: string) {
     });
 
     revalidatePath('/dashboard');
-    revalidatePath(`/${block.profile.slug}`);
 
     return { ok: true };
   } catch (error) {
@@ -165,7 +167,6 @@ export async function reorderProfileElements(
     await prisma.$transaction(updates);
 
     revalidatePath('/dashboard');
-    revalidatePath(`/${profile.slug}`);
 
     return { ok: true };
   } catch (error) {

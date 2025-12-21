@@ -27,7 +27,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@acme/ui';
 import { toast } from '@acme/ui';
 
-import type { Block, BlockType, BlockContent } from '@/types/blocks';
+import type { Block, BlockType, BlockContent, BlockParentType } from '@/types/blocks';
 import { BlockTypeEnum, createDefaultBlockContent, reorderBlocks } from '@/lib/block-types';
 
 interface DashboardBuilderProps {
@@ -41,6 +41,10 @@ interface ProfileElement {
   type: BlockType;
   content: BlockContent;
   order: number;
+  createdAt: string;
+  updatedAt: string;
+  parentId: string;
+  parentType: BlockParentType;
 }
 
 const elementTypeIcons = {
@@ -76,6 +80,10 @@ export function DashboardBuilder({
         type: block.type,
         content: block.content,
         order: block.order,
+        createdAt: block.createdAt,
+        updatedAt: block.updatedAt,
+        parentId: block.parentId,
+        parentType: block.parentType,
       }))
       .sort((a, b) => a.order - b.order);
   });
@@ -110,11 +118,16 @@ export function DashboardBuilder({
   }, [blocks, profileId, onBlocksChange]);
 
   const handleAddBlock = (type: BlockType) => {
+    const now = new Date().toISOString();
     const newBlock: ProfileElement = {
       id: `temp-${Date.now()}`,
       type,
       content: createDefaultBlockContent(type),
       order: blocks.length,
+      createdAt: now,
+      updatedAt: now,
+      parentId: profileId,
+      parentType: 'PROFILE' as BlockParentType,
     };
 
     const updatedBlocks = reorderBlocks([...blocks, newBlock]);
@@ -166,7 +179,7 @@ export function DashboardBuilder({
     if (!selectedBlockId) return;
 
     handleUpdateBlock(selectedBlockId, {
-      content: { ...selectedBlock!.content, ...updates },
+      content: { ...selectedBlock!.content, ...updates } as BlockContent,
     });
   };
 

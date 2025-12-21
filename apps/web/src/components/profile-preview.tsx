@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import type { Block } from '@/types/blocks';
 import { BlockTypeEnum } from '@/lib/block-types';
 
@@ -18,7 +19,7 @@ interface LinkInfo {
   url: string;
   linkType: 'URL' | 'COPY_FIELD';
   status: string;
-  deletedAt: string | null;
+  deletedAt: Date | null;
   metadata: any;
 }
 
@@ -35,6 +36,7 @@ interface PublicProfilePageProps {
   links?: LinkInfo[];
   showQr?: boolean;
   pages?: PageInfo[];
+  className?: string;
 }
 
 interface DashboardBuilderProps {
@@ -60,23 +62,23 @@ export function ProfilePreview(props: ProfilePreviewProps) {
 
   if (isPublicProfilePage(props)) {
     const { profile, elements, links, showQr, pages, className = '' } = props;
-    
+
     return (
       <div className={`space-y-4 ${className}`}>
-        <div className="text-center mb-6">
+        <div className="mb-6 text-center">
           {profile.image && (
-            <img
+            <Image
               src={profile.image}
               alt={profile.displayName || profile.slug}
-              className="w-20 h-20 rounded-full mx-auto mb-4"
+              width={80}
+              height={80}
+              className="mx-auto mb-4 rounded-full"
             />
           )}
-          <h1 className="text-2xl font-bold mb-2">{profile.displayName || profile.slug}</h1>
-          {profile.bio && (
-            <p className="text-gray-600 dark:text-gray-400 mb-4">{profile.bio}</p>
-          )}
+          <h1 className="mb-2 text-2xl font-bold">{profile.displayName || profile.slug}</h1>
+          {profile.bio && <p className="mb-4 text-gray-600 dark:text-gray-400">{profile.bio}</p>}
         </div>
-        
+
         {/* Render new block-based elements */}
         {elements && elements.length > 0 && (
           <div className="space-y-3">
@@ -85,16 +87,20 @@ export function ProfilePreview(props: ProfilePreviewProps) {
               switch (element.type) {
                 case 'SOCIAL':
                   return (
-                    <div key={element.id} className="bg-pink-50 border border-pink-200 rounded-lg p-4 text-center">
+                    <div
+                      key={element.id}
+                      className="rounded-lg border border-pink-200 bg-pink-50 p-4 text-center"
+                    >
                       <div className="text-sm font-medium text-pink-800">
-                        {element.content?.displayName || `Follow me on ${element.content?.platform}`}
+                        {element.content?.displayName ||
+                          `Follow me on ${element.content?.platform}`}
                       </div>
                       {element.content?.username && (
-                        <div className="text-xs text-pink-600 mt-1">{element.content.username}</div>
+                        <div className="mt-1 text-xs text-pink-600">{element.content.username}</div>
                       )}
                     </div>
                   );
-                  
+
                 case 'LINK':
                   return (
                     <a
@@ -102,25 +108,25 @@ export function ProfilePreview(props: ProfilePreviewProps) {
                       href={element.content?.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block bg-blue-500 hover:bg-blue-600 text-white rounded-lg p-4 text-center transition-colors"
+                      className="block rounded-lg bg-blue-500 p-4 text-center text-white transition-colors hover:bg-blue-600"
                     >
                       <div className="text-sm font-medium">{element.content?.title}</div>
                     </a>
                   );
-                  
+
                 case 'COPY_TEXT':
                   return (
                     <div
                       key={element.id}
-                      className="bg-green-50 border border-green-200 rounded-lg p-4 text-center"
+                      className="rounded-lg border border-green-200 bg-green-50 p-4 text-center"
                     >
                       <div className="text-sm">{element.content?.text}</div>
                       {element.content?.label && (
-                        <div className="text-xs text-green-600 mt-1">{element.content.label}</div>
+                        <div className="mt-1 text-xs text-green-600">{element.content.label}</div>
                       )}
                     </div>
                   );
-                  
+
                 case 'MARKDOWN':
                   return (
                     <div key={element.id} className="prose prose-sm max-w-none">
@@ -129,21 +135,22 @@ export function ProfilePreview(props: ProfilePreviewProps) {
                       </div>
                     </div>
                   );
-                  
+
                 case 'EXPAND':
                   return (
-                    <div key={element.id} className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div
+                      key={element.id}
+                      className="overflow-hidden rounded-lg border border-gray-200"
+                    >
                       <div className="bg-gray-50 p-3 text-sm font-medium text-gray-800">
                         {element.content?.title}
                       </div>
                       {element.content?.markdown && (
-                        <div className="p-3 text-xs text-gray-600">
-                          {element.content.markdown}
-                        </div>
+                        <div className="p-3 text-xs text-gray-600">{element.content.markdown}</div>
                       )}
                     </div>
                   );
-                  
+
                 case 'BUTTON':
                   return (
                     <a
@@ -151,15 +158,15 @@ export function ProfilePreview(props: ProfilePreviewProps) {
                       href={element.content?.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block bg-blue-500 hover:bg-blue-600 text-white rounded-lg p-4 text-center transition-colors"
+                      className="block rounded-lg bg-blue-500 p-4 text-center text-white transition-colors hover:bg-blue-600"
                     >
                       <div className="text-sm font-medium">{element.content?.label}</div>
                     </a>
                   );
-                  
+
                 default:
                   return (
-                    <div key={element.id} className="border border-gray-200 rounded-lg p-4">
+                    <div key={element.id} className="rounded-lg border border-gray-200 p-4">
                       <div className="text-xs text-gray-500">
                         Unknown element type: {element.type}
                       </div>
@@ -179,7 +186,7 @@ export function ProfilePreview(props: ProfilePreviewProps) {
                 href={link.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block bg-blue-500 hover:bg-blue-600 text-white rounded-lg p-4 text-center transition-colors"
+                className="block rounded-lg bg-blue-500 p-4 text-center text-white transition-colors hover:bg-blue-600"
               >
                 {link.title}
               </a>
@@ -194,7 +201,7 @@ export function ProfilePreview(props: ProfilePreviewProps) {
               <a
                 key={page.id}
                 href={`/s/${page.slug}`}
-                className="block bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg p-4 text-center transition-colors"
+                className="block rounded-lg bg-gray-100 p-4 text-center text-gray-800 transition-colors hover:bg-gray-200"
               >
                 {page.icon && <span className="mr-2">{page.icon}</span>}
                 {page.title}
@@ -230,8 +237,12 @@ export function ProfilePreview(props: ProfilePreviewProps) {
               <div className="text-sm font-medium text-pink-800">
                 {content.displayName || `Follow me on ${content.platform}`}
               </div>
-              {content.username && <div className="mt-1 text-xs text-pink-600">{content.username}</div>}
-              {content.url && <div className="mt-1 break-all text-xs text-pink-500">{content.url}</div>}
+              {content.username && (
+                <div className="mt-1 text-xs text-pink-600">{content.username}</div>
+              )}
+              {content.url && (
+                <div className="mt-1 break-all text-xs text-pink-500">{content.url}</div>
+              )}
             </div>
           );
 
@@ -274,7 +285,9 @@ export function ProfilePreview(props: ProfilePreviewProps) {
         case BlockTypeEnum.EXPAND:
           return (
             <div key={block.id} className="overflow-hidden rounded-lg border border-gray-200">
-              <div className="bg-gray-50 p-3 text-sm font-medium text-gray-800">{content.title}</div>
+              <div className="bg-gray-50 p-3 text-sm font-medium text-gray-800">
+                {content.title}
+              </div>
               {content.markdown && (
                 <div className="p-3 text-xs text-gray-600">{content.markdown}</div>
               )}
