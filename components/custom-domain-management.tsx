@@ -337,7 +337,16 @@ export function CustomDomainManagement({ user: initialUser }: CustomDomainManage
   }
 
   const handleRootDomainModeChange = async (newMode: "bio" | "redirect") => {
+    const prevMode = rootDomainMode
     setRootDomainMode(newMode)
+    
+    // If switching to redirect mode, only update UI state - don't send API request yet
+    // User needs to enter the redirect URL and click "Save Redirect URL"
+    if (newMode === "redirect") {
+      return
+    }
+
+    // If switching to bio mode, send API request immediately (no URL needed)
     setSavingConfig(true)
     setError("")
 
@@ -348,14 +357,14 @@ export function CustomDomainManagement({ user: initialUser }: CustomDomainManage
         body: JSON.stringify({
           use_domain_for_shortlinks: useDomainForShortlinks,
           root_domain_mode: newMode,
-          root_domain_redirect_url: newMode === "redirect" ? rootDomainRedirectUrl : null,
+          root_domain_redirect_url: null,
         }),
       })
 
       if (!response.ok) {
         const data = await response.json()
         setError(data.error || "Failed to save configuration")
-        setRootDomainMode(rootDomainMode)
+        setRootDomainMode(prevMode)
         setSavingConfig(false)
         return
       }
@@ -366,7 +375,7 @@ export function CustomDomainManagement({ user: initialUser }: CustomDomainManage
     } catch (err) {
       console.error("[v0] Root domain mode change error:", err)
       setError("Failed to connect to server")
-      setRootDomainMode(rootDomainMode)
+      setRootDomainMode(prevMode)
     } finally {
       setSavingConfig(false)
     }
@@ -385,7 +394,7 @@ export function CustomDomainManagement({ user: initialUser }: CustomDomainManage
     try {
       new URL(rootDomainRedirectUrl)
     } catch {
-      setError("Please enter a valid URL")
+      setError("Please enter a valid URL (e.g., https://example.com)")
       return
     }
 
@@ -398,8 +407,8 @@ export function CustomDomainManagement({ user: initialUser }: CustomDomainManage
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           use_domain_for_shortlinks: useDomainForShortlinks,
-          root_domain_mode: rootDomainMode,
-          root_domain_redirect_url: rootDomainMode === "redirect" ? rootDomainRedirectUrl : null,
+          root_domain_mode: "redirect",
+          root_domain_redirect_url: rootDomainRedirectUrl,
         }),
       })
 
@@ -412,7 +421,7 @@ export function CustomDomainManagement({ user: initialUser }: CustomDomainManage
 
       await refreshUserData()
       setSuccess(true)
-      setTimeout(() => setSuccess(false), 2000)
+      setTimeout(() => setSuccess(false), 3000)
     } catch (err) {
       console.error("[v0] Save redirect URL error:", err)
       setError("Failed to connect to server")

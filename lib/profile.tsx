@@ -16,6 +16,8 @@ export interface PublicProfile {
     background_value?: string | null
     font_family?: string
     button_style?: any
+    root_domain_mode?: "bio" | "redirect"
+    root_domain_redirect_url?: string | null
   }
   links: BioLink[]
 }
@@ -23,7 +25,7 @@ export interface PublicProfile {
 export async function getPublicProfile(username: string): Promise<PublicProfile | null> {
   const userResult = await sql`
     SELECT username, display_name, bio, avatar_url, profile_image_url, theme, custom_js, custom_html, subscription_tier,
-           background_type, background_value, font_family, button_style
+           background_type, background_value, font_family, button_style, root_domain_mode, root_domain_redirect_url
     FROM users
     WHERE username = ${username}
   `
@@ -57,6 +59,8 @@ export async function getPublicProfile(username: string): Promise<PublicProfile 
       background_value: user.background_value,
       font_family: user.font_family,
       button_style: user.button_style,
+      root_domain_mode: user.root_domain_mode,
+      root_domain_redirect_url: user.root_domain_redirect_url,
     },
     links: linksResult as BioLink[],
   }
