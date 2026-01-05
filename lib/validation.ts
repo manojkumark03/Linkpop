@@ -102,5 +102,20 @@ export const updateProfileSchema = z.object({
   custom_domain: z.string().max(255).optional(),
   use_domain_for_shortlinks: z.boolean().optional(),
   root_domain_mode: z.enum(["bio", "redirect"]).optional(),
-  root_domain_redirect_url: z.string().max(2000).optional(),
+  root_domain_redirect_url: z
+    .string()
+    .max(2000)
+    .refine(
+      (url) => {
+        if (!url || url.trim() === "") return true // Allow empty string
+        try {
+          new URL(url)
+          return true
+        } catch {
+          return false
+        }
+      },
+      { message: "Invalid URL format" }
+    )
+    .optional(),
 })

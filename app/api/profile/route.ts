@@ -54,6 +54,30 @@ async function updateProfileHandler(request: NextRequest) {
       return NextResponse.json({ error: "Custom domain requires Pro subscription" }, { status: 403 })
     }
 
+    // Validate redirect mode configuration
+    if (data.root_domain_mode === "redirect") {
+      // Check if redirect URL is provided in this request or already exists in DB
+      if (!data.root_domain_redirect_url || !data.root_domain_redirect_url.trim()) {
+        // Check if user already has a redirect URL in DB
+        const userResult = await sql`
+          SELECT root_domain_redirect_url FROM users WHERE id = ${user.id}
+        `
+        if (!userResult[0]?.root_domain_redirect_url) {
+          return NextResponse.json(
+            { error: "Redirect URL is required when using redirect mode" },
+            { status: 400 }
+          )
+        }
+      } else {
+        // Validate URL format
+        try {
+          new URL(data.root_domain_redirect_url)
+        } catch {
+          return NextResponse.json({ error: "Invalid redirect URL format" }, { status: 400 })
+        }
+      }
+    }
+
     await updateUserProfile(user.id, data)
 
     return NextResponse.json({ success: true })
