@@ -14,14 +14,15 @@ export function generateShortCode(length = 6): string {
 }
 
 // Check if a short code is available
-export async function isShortCodeAvailable(shortCode: string): Promise<boolean> {
+// Check if a short code is available FOR THIS USER
+export async function isShortCodeAvailable(shortCode: string, userId: string): Promise<boolean> {
   if (isReservedRoute(shortCode)) {
     return false
   }
 
-  // Check if short code exists in shortened_urls
+  // Check if short code exists for THIS USER
   const urlResult = await sql`
-    SELECT id FROM shortened_urls WHERE short_code = ${shortCode}
+    SELECT id FROM shortened_urls WHERE short_code = ${shortCode} AND user_id = ${userId}
   `
 
   if (urlResult.length > 0) {
@@ -35,7 +36,6 @@ export async function isShortCodeAvailable(shortCode: string): Promise<boolean> 
 
   return userResult.length === 0
 }
-
 // Generate alternative short code suggestion
 function generateAlternativeCode(baseCode: string): string {
   const suffix = Math.floor(Math.random() * 999) + 1
@@ -60,17 +60,17 @@ export async function createShortenedUrl(
       if (attempts > 10) {
         throw new ShortlinkError("Unable to generate a unique code. Please try again in a moment.")
       }
-    } while (!(await isShortCodeAvailable(shortCode)))
+    } while (!(await isShortCodeAvailable(shortCode, userId)))
   } else {
-    // Check if custom code is available
-    const available = await isShortCodeAvailable(shortCode)
+    // Check if custom code is available FOR THIS USER
+    const available = await isShortCodeAvailable(shortCode, userId)
     if (!available) {
       // Generate alternative suggestions
       const suggestion = generateAlternativeCode(shortCode)
       if (isReservedRoute(shortCode)) {
         throw new ShortlinkError("This code is reserved. Choose a different one.", suggestion)
       }
-      throw new ShortlinkError(`This code is taken. Try: ${suggestion}`, suggestion)
+      throw new ShortlinkError(`You already have a link with this code. Try: ${suggestion}`, suggestion)
     }
   }
 
@@ -92,7 +92,7 @@ export async function createShortenedUrl(
     // Handle duplicate key error
     if (error.code === "23505" || error.message?.includes("duplicate")) {
       const suggestion = generateAlternativeCode(shortCode)
-      throw new ShortlinkError(`This code is taken. Try: ${suggestion}`, suggestion)
+      throw new ShortlinkError(`You already have a link with this code. Try: ${suggestion}`, suggestion)
     }
 
     throw new ShortlinkError("Unable to connect. Please try again in a moment.")

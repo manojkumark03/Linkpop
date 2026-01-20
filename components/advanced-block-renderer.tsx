@@ -135,32 +135,18 @@ export function AdvancedBlockRenderer({ block, onLinkClick, isDark = false }: Ad
     )
   }
 
-  if (block.block_type === "page") {
-    const username =
-      typeof window !== "undefined"
-        ? (() => {
-            const hostname = window.location.hostname
-            const subdomain = hostname.split(".")[0]
-
-            // If on subdomain (e.g., john.linkpop.space), use subdomain
-            if (subdomain && subdomain !== "linkpop" && hostname.includes("linkpop.space")) {
-              return subdomain
-            }
-
-            // Otherwise extract from path (e.g., linkpop.space/john)
-            const pathUsername = window.location.pathname.split("/")[1]
-            return pathUsername || ""
-          })()
-        : ""
-
-    return (
-      <button
-        onClick={() => {
-          onLinkClick(block.id)
-          router.push(`/page/${block.block_data.slug}?bid=${block.id}&u=${username}`)
-        }}
-        className="block w-full"
-      >
+if (block.block_type === "page") {
+  return (
+    <button
+      onClick={() => {
+        onLinkClick(block.id)
+        
+        // Keep the same origin (custom domain or subdomain) when navigating
+        const pageUrl = `/page/${block.block_data.slug}?bid=${block.id}`
+        router.push(pageUrl)
+      }}
+      className="block w-full"
+    >
         <Card
           className="p-4 hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer backdrop-blur-sm border-0"
           style={blockStyles}

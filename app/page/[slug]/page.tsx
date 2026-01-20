@@ -7,30 +7,56 @@ import Link from "next/link"
 import ReactMarkdown from "react-markdown"
 import { headers } from "next/headers"
 import { parseHostname } from "@/lib/constants"
+import { sql } from "@/lib/db"
 
 export default async function PageBlockPage({
   params,
   searchParams,
 }: {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ bid?: string; u?: string }>
+  searchParams: Promise<{ bid?: string }>
 }) {
   const { slug } = await params
-  const { bid, u } = await searchParams
+  const { bid } = await searchParams
 
+  if (!bid) {
+    console.log("[v0] Page block missing block ID")
+    notFound()
+  }
+
+  // Get hostname to determine which domain we're on
   const headersList = await headers()
   const hostname = headersList.get("host") || ""
   const { isUserSubdomain, subdomain } = parseHostname(hostname)
 
-  let username = u
+  let username: string | null = null
+  let rootDomainMode: string | null = null
 
-  // If on subdomain and no username provided, use subdomain
-  if (!username && isUserSubdomain && subdomain) {
-    username = subdomain
+  // Check if custom domain
+  if (!isUserSubdomain && hostname && !hostname.includes("localhost") && !hostname.includes("vercel.app")) {
+    const customDomainResult = await sql`
+      SELECT username, root_domain_mode 
+      FROM users 
+      WHERE custom_domain = ${hostname} AND domain_verified = true
+    `
+    
+    if (customDomainResult.length > 0) {
+      username = customDomainResult[0].username
+      rootDomainMode = customDomainResult[0].root_domain_mode
+    }
+  } else if (isUserSubdomain && subdomain) {
+    // On subdomain
+    const subdomainResult = await sql`
+      SELECT username FROM users WHERE subdomain = ${subdomain}
+    `
+    
+    if (subdomainResult.length > 0) {
+      username = subdomainResult[0].username
+    }
   }
 
-  if (!bid || !username) {
-    console.log("[v0] Page block missing required params:", { bid, username, hostname })
+  if (!username) {
+    console.log("[v0] Could not determine username from hostname:", hostname)
     notFound()
   }
 
@@ -56,11 +82,14 @@ export default async function PageBlockPage({
   const textColorClass = isDark ? "text-white" : "text-gray-900"
   const mutedTextClass = isDark ? "text-gray-300" : "text-gray-600"
 
+  // Determine back URL based on root domain mode
+  const backUrl = rootDomainMode === "redirect" ? "/bio" : "/"
+
   return (
     <div className={`min-h-screen ${isDark ? "dark" : ""}`} style={backgroundStyle}>
       <div className="container max-w-3xl mx-auto px-4 py-8">
         <Button asChild variant="ghost" className="mb-6">
-          <Link href="/">
+          <Link href={backUrl}>
             <ArrowLeft className="size-4 mr-2" />
             Back to Profile
           </Link>

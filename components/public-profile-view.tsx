@@ -131,7 +131,7 @@ export function PublicProfileView({ profile }: PublicProfileViewProps) {
 
   return (
     <div className={`min-h-screen ${isDark ? "dark" : ""}`} style={{ ...getBackgroundStyle(), fontFamily }}>
-      <main className="container max-w-2xl mx-auto px-4 py-12">
+      <main className="container max-w-2xl mx-auto px-4 py-12 relative">
         <div className="flex flex-col items-center text-center space-y-6">
           <div className="space-y-4">
             <div className="flex justify-center">
@@ -142,30 +142,32 @@ export function PublicProfileView({ profile }: PublicProfileViewProps) {
                 <AvatarFallback className="text-2xl">{user.username.charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
             </div>
+            {/* Share button in top-right corner */}
+<div className="absolute top-4 right-4">
+  <Button
+    variant="ghost"
+    size="sm"
+    onClick={handleShareProfile}
+    className={`${isDark ? "bg-gray-800/80 border border-gray-700 hover:bg-gray-700/80 text-white" : "bg-white/80 border hover:bg-white"} backdrop-blur-sm`}
+  >
+    {copied ? (
+      <>
+        <Check className="size-4 mr-1.5" />
+        <span className="text-sm">Copied</span>
+      </>
+    ) : (
+      <> 
+        <Share2 className="size-4 mr-1.5" />
+        <span className="text-sm">Share</span>
+      </>
+    )}
+  </Button>
+</div>
 
-            <div className="space-y-2">
-              <h1 className={`text-3xl font-bold ${textColorClass}`}>{user.display_name || user.username}</h1>
-              {user.bio && <p className={`${mutedTextClass} max-w-md mx-auto`}>{user.bio}</p>}
-            </div>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleShareProfile}
-              className={`${isDark ? "bg-gray-800 border-gray-700 hover:bg-gray-700" : "bg-white/80 hover:bg-white"}`}
-            >
-              {copied ? (
-                <>
-                  <Check className="size-4 mr-2" />
-                  Copied!
-                </>
-              ) : (
-                <>
-                  <Share2 className="size-4 mr-2" />
-                  Share Profile
-                </>
-              )}
-            </Button>
+<div className="space-y-2">
+  <h1 className={`text-3xl font-bold ${textColorClass}`}>{user.display_name || user.username}</h1>
+  {user.bio && <p className={`${mutedTextClass} max-w-md mx-auto`}>{user.bio}</p>}
+</div>
           </div>
 
           <div className="w-full space-y-3 pt-4">

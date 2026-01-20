@@ -24,16 +24,20 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           WHERE su.short_code = ${slug} 
             AND su.is_active = true
             AND (u.subdomain = ${identifier} OR u.custom_domain = ${identifier})
+          LIMIT 1
         `
       })
     } else {
-      // Query for any short code (main domain)
+      // Fallback: query for any short code (shouldn't happen in new routing)
+      // This maintains backward compatibility
       shortenedUrl = await queryWithTimeout(async () => {
         return await sql`
           SELECT su.*, u.username, u.subscription_tier
           FROM shortened_urls su
           INNER JOIN users u ON su.user_id = u.id
           WHERE su.short_code = ${slug} AND su.is_active = true
+          ORDER BY su.created_at ASC
+          LIMIT 1
         `
       })
     }
