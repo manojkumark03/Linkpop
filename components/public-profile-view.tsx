@@ -10,9 +10,10 @@ import { Share2, Check } from "lucide-react"
 
 interface PublicProfileViewProps {
   profile: PublicProfile
+  isPreview?: boolean
 }
 
-export function PublicProfileView({ profile }: PublicProfileViewProps) {
+export function PublicProfileView({ profile, isPreview = false }: PublicProfileViewProps) {
   const { user, links } = profile
   const [copied, setCopied] = useState(false)
 
@@ -174,18 +175,23 @@ export function PublicProfileView({ profile }: PublicProfileViewProps) {
             {links.length === 0 ? (
               <div className={`p-8 ${mutedTextClass}`}>No links yet</div>
             ) : (
-              <div style={{ "--button-radius": buttonStyle.borderRadius } as any}>
-                {links.map((link) => (
-                  <div
-                    key={link.id}
-                    style={{
-                      marginBottom: "12px",
-                    }}
-                  >
-                    <AdvancedBlockRenderer block={link as any} onLinkClick={handleLinkClick} isDark={isDark} />
-                  </div>
-                ))}
-              </div>
+ <div style={{ "--button-radius": buttonStyle.borderRadius } as any}>
+    {links.map((link) => (
+      <div
+        key={link.id}
+        style={{
+          marginBottom: "12px",
+        }}
+      >
+        <AdvancedBlockRenderer 
+          block={link as any} 
+          onLinkClick={handleLinkClick} 
+          isDark={isDark}
+          isPreview={isPreview} // Add this
+        />
+      </div>
+    ))}
+  </div>
             )}
           </div>
 

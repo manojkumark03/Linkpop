@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Eye, Settings, Palette, Link2, Plus, ExternalLink } from "lucide-react"
+import { Eye, Settings, Palette, Link2, Plus, Copy,Check } from "lucide-react"
 import { BioLinkList } from "@/components/bio-link-list"
 import { AdvancedBlockForm } from "@/components/advanced-block-form"
 import { LinktreePreview } from "@/components/linktree-preview"
@@ -22,7 +22,7 @@ export function LinktreeEditor({ user: initialUser }: LinktreeEditorProps) {
   const [showAddBlock, setShowAddBlock] = useState(false)
   const [activeTab, setActiveTab] = useState("links")
   const isPro = isProTier(user.subscription_tier)
-
+  const [copied, setCopied] = useState(false)
   const handleUpdate = () => {
     setRefreshTrigger((prev) => prev + 1)
     fetch("/api/auth/me")
@@ -42,6 +42,15 @@ export function LinktreeEditor({ user: initialUser }: LinktreeEditorProps) {
       : `https://${user.custom_domain}`
     : `https://${user.username}.${appDomain}`
 
+
+
+
+  const copyProfileUrl = () => {
+    navigator.clipboard.writeText(profileUrl)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
   return (
     <div className="h-screen flex flex-col bg-background">
       <div className="border-b bg-card">
@@ -52,13 +61,8 @@ export function LinktreeEditor({ user: initialUser }: LinktreeEditorProps) {
               <span className="text-muted-foreground">Your URL:</span>
               <code className="px-2 py-1 bg-muted rounded text-xs">{profileUrl}</code>
             </div>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => window.open(profileUrl, "_blank", "noopener,noreferrer")}
-              title="Open profile"
-            >
-              <ExternalLink className="size-4" />
+             <Button size="sm" variant="ghost" onClick={copyProfileUrl} title="Copy URL">
+              {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
             </Button>
           </div>
         </div>

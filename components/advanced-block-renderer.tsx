@@ -7,17 +7,23 @@ import * as LucideIcons from "lucide-react"
 import type { Block } from "@/lib/blocks"
 import { getSocialIcon } from "@/lib/blocks"
 import { useRouter } from "next/navigation"
+import ReactMarkdown from "react-markdown" // Add this import
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog" // Add this
+
 
 interface AdvancedBlockRendererProps {
   block: Block
   onLinkClick: (blockId: string) => void
   isDark?: boolean
+    isPreview?: boolean // Add this prop
 }
 
-export function AdvancedBlockRenderer({ block, onLinkClick, isDark = false }: AdvancedBlockRendererProps) {
+export function AdvancedBlockRenderer({ block, onLinkClick, isDark = false, isPreview = false }: AdvancedBlockRendererProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [showPageDialog, setShowPageDialog] = useState(false) // Add this
   const router = useRouter()
+
 
   const getIcon = (iconName: string | null) => {
     if (!iconName) return <ExternalLink className="size-5" />
@@ -135,30 +141,68 @@ export function AdvancedBlockRenderer({ block, onLinkClick, isDark = false }: Ad
     )
   }
 
-if (block.block_type === "page") {
-  return (
-    <button
-      onClick={() => {
-        onLinkClick(block.id)
-        
-        // Keep the same origin (custom domain or subdomain) when navigating
-        const pageUrl = `/page/${block.block_data.slug}?bid=${block.id}`
-        router.push(pageUrl)
-      }}
-      className="block w-full"
-    >
-        <Card
-          className="p-4 hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer backdrop-blur-sm border-0"
-          style={blockStyles}
+  if (block.block_type === "page") {
+    const handlePageClick = () => {
+      onLinkClick(block.id)
+      
+      if (isPreview) {
+        // In preview, show inline dialog
+        setShowPageDialog(true)
+      } else {
+        // In production, navigate to page
+        const username =
+          typeof window !== "undefined"
+            ? (() => {
+                const hostname = window.location.hostname
+                const subdomain = hostname.split(".")[0]
+
+                if (subdomain && subdomain !== "linkpop" && hostname.includes("linkpop.space")) {
+                  return subdomain
+                }
+
+                const pathUsername = window.location.pathname.split("/")[1]
+                return pathUsername || ""
+              })()
+            : ""
+
+        router.push(`/page/${block.block_data.slug}?bid=${block.id}&u=${username}`)
+      }
+    }
+
+    return (
+      <>
+        <button
+          onClick={handlePageClick}
+          className="block w-full"
         >
-          <div className="flex items-center justify-center gap-3">
-            <FileText className="size-5" />
-            <span className="font-medium text-lg">{block.title}</span>
-          </div>
-        </Card>
-      </button>
+          <Card
+            className="p-4 hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer backdrop-blur-sm border-0"
+            style={blockStyles}
+          >
+            <div className="flex items-center justify-center gap-3">
+              <FileText className="size-5" />
+              <span className="font-medium text-lg">{block.title}</span>
+            </div>
+          </Card>
+        </button>
+
+        {/* Add preview dialog */}
+        {isPreview && (
+          <Dialog open={showPageDialog} onOpenChange={setShowPageDialog}>
+            <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>{block.title}</DialogTitle>
+              </DialogHeader>
+              <div className={`prose ${isDark ? "prose-invert" : ""} max-w-none`}>
+                <ReactMarkdown>{block.block_data.content}</ReactMarkdown>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+      </>
     )
   }
+
 
   // Divider block
   if (block.block_type === "divider") {

@@ -113,7 +113,7 @@ export function AdvancedBlockForm({ onBlockCreated, isPro }: AdvancedBlockFormPr
   }
 
   const blockTypeOptions = [
-    { value: "link", label: "Link", icon: Link2, pro: false },
+    { value: "link", label: "Button", icon: Link2, pro: false },
     { value: "social", label: "Social Link", icon: Share2, pro: false },
     { value: "divider", label: "Divider", icon: Minus, pro: false },
     { value: "page", label: "Page", icon: FileText, pro: true },
