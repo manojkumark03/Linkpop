@@ -28,7 +28,7 @@ async function loginHandler(request: NextRequest) {
     // Set session cookie
     await setSessionCookie(session.token)
 
-    return NextResponse.json({ user })
+return NextResponse.json({ user, token: session.token })
   } catch (error) {
     console.error("Login error:", error)
     return NextResponse.json({ error: "Failed to log in" }, { status: 500 })

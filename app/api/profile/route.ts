@@ -9,7 +9,7 @@ import { isProTier } from "@/lib/subscription"
 import { sql } from "@/lib/db"
 
 async function updateProfileHandler(request: NextRequest) {
-  const user = await getCurrentUser()
+  const user = await getCurrentUser(request)
 
   if (!user) {
     throw new AuthenticationError("You must be signed in to update your profile")

@@ -9,7 +9,7 @@ import { ShortlinkError, DatabaseError } from "@/lib/errors"
 
 async function getUrlsHandler(request: NextRequest) {
   try {
-    const user = await getCurrentUser()
+    const user = await getCurrentUser(request)
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -26,7 +26,7 @@ async function getUrlsHandler(request: NextRequest) {
 
 async function createUrlHandler(request: NextRequest) {
   try {
-    const user = await getCurrentUser()
+    const user = await getCurrentUser(request)
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })

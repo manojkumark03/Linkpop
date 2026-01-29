@@ -9,7 +9,7 @@ import { detectSocialPlatform } from "@/lib/blocks"
 
 async function getBioLinksHandler(request: NextRequest) {
   try {
-    const user = await getCurrentUser()
+    const user = await getCurrentUser(request)
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -26,7 +26,7 @@ async function getBioLinksHandler(request: NextRequest) {
 
 async function createBioLinkHandler(request: NextRequest) {
   try {
-    const user = await getCurrentUser()
+    const user = await getCurrentUser(request)
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })

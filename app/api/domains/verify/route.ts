@@ -12,7 +12,7 @@ import { isProTier } from "@/lib/subscription"
 
 async function verifyDomainHandler(request: NextRequest) {
   try {
-    const user = await getCurrentUser()
+    const user = await getCurrentUser(request)
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })

@@ -3,6 +3,7 @@ import type { User, Session } from "./types"
 import bcrypt from "bcryptjs"
 import { cookies } from "next/headers"
 import crypto from "crypto"
+import type { NextRequest } from "next/server"
 
 const SESSION_COOKIE_NAME = "linkpop_session"
 const SESSION_DURATION = 30 * 24 * 60 * 60 * 1000 // 30 days
@@ -90,7 +91,30 @@ export async function deleteSession(token: string): Promise<void> {
   `
 }
 
-export async function getCurrentUser(): Promise<User | null> {
+export async function getCurrentUser(request?: NextRequest): Promise<User | null> {
+    if (request) {
+    const authHeader = request.headers.get("authorization")
+    if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.substring(7)
+      const session = await getSessionByToken(token)
+      
+      if (session) {
+        const result = await sql`
+          SELECT id, email, username, display_name, bio, avatar_url, profile_image_url, theme, 
+                 subscription_tier, subscription_expires_at, whop_user_id, 
+                 custom_domain, domain_verified, custom_js, 
+                 background_type, background_value, font_family, button_style,
+                 created_at, updated_at, root_domain_mode, root_domain_redirect_url, use_domain_for_shortlinks
+          FROM users WHERE id = ${session.user_id}
+        `
+        
+        if (result.length > 0) {
+          return result[0] as User
+        }
+      }
+    }
+  }
+  
   const cookieStore = await cookies()
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value
 

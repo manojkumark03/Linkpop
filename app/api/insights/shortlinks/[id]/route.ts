@@ -5,7 +5,7 @@ import { getSubscriptionLimits, type SubscriptionTier } from "@/lib/subscription
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const user = await getCurrentUser()
+    const user = await getCurrentUser(request)
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })

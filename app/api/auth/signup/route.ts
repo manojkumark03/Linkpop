@@ -45,7 +45,7 @@ async function signupHandler(request: NextRequest) {
     // Set session cookie
     await setSessionCookie(session.token)
 
-    return NextResponse.json({ user }, { status: 201 })
+return NextResponse.json({ user, token: session.token }, { status: 201 })
   } catch (error) {
     console.error("Signup error:", error)
     return NextResponse.json({ error: "Failed to create account" }, { status: 500 })
